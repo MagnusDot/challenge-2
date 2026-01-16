@@ -8,7 +8,7 @@ export function useTransactions() {
   const selectedRiskLevel = ref('');
   const selectedType = ref('');
   const availableFiles = ref([]);
-  const selectedFile = ref('');
+  const selectedFile = ref('all');
 
   const availableTypes = computed(() => {
     const types = new Set();
@@ -50,7 +50,6 @@ export function useTransactions() {
         transactionTypes.value = typesMap;
       }
     } catch (err) {
-      console.warn('Unable to load transaction types:', err);
     }
   };
 
@@ -60,19 +59,21 @@ export function useTransactions() {
       if (response.ok) {
         const files = await response.json();
         availableFiles.value = files;
-        if (files.length > 0 && !selectedFile.value) {
-          selectedFile.value = files[0];
+        if (files.length > 0 && (!selectedFile.value || selectedFile.value === '')) {
+          selectedFile.value = 'all';
         }
       }
     } catch (err) {
-      console.warn('Unable to load available files:', err);
     }
   };
 
-  const loadResults = async () => {
+  const loadResults = async (fileToLoad = null) => {
     try {
       loading.value = true;
       error.value = null;
+      transactions.value = [];
+
+      const fileToUse = fileToLoad || selectedFile.value;
 
       if (availableFiles.value.length === 0) {
         await loadAvailableFiles();
@@ -80,14 +81,26 @@ export function useTransactions() {
 
       if (availableFiles.value.length === 0) {
         transactions.value = [];
+        loading.value = false;
         return;
       }
 
+      if (!fileToUse || fileToUse === '') {
+        if (availableFiles.value.length > 0) {
+          selectedFile.value = 'all';
+          return await loadResults('all');
+        } else {
+          transactions.value = [];
+          loading.value = false;
+          return;
+        }
+      }
+
       let filesToLoad = [];
-      if (selectedFile.value && selectedFile.value !== 'all') {
-        filesToLoad = [selectedFile.value];
-      } else {
+      if (fileToUse === 'all') {
         filesToLoad = availableFiles.value;
+      } else {
+        filesToLoad = [fileToUse];
       }
 
       let allTransactions = [];
@@ -110,7 +123,6 @@ export function useTransactions() {
       transactions.value = allTransactions;
     } catch (err) {
       error.value = err.message || 'Error loading data';
-      console.error('Error:', err);
     } finally {
       loading.value = false;
     }

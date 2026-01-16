@@ -15,7 +15,7 @@ async def list_results():
     json_files = [
         f.name
         for f in RESULTS_DIR.iterdir()
-        if f.is_file() and f.suffix == ".json"
+        if f.is_file() and f.suffix == ".json" and "summary" not in f.name.lower()
     ]
     return sorted(json_files)
 

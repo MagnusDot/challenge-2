@@ -9,6 +9,7 @@
         v-model="selectedFile"
         :options="fileOptions"
         :placeholder="''"
+        @update:modelValue="handleFileChange"
       />
       <FilterGroup
         id="risk-level"
@@ -67,7 +68,7 @@
 </template>
 
 <script>
-import { computed, onMounted, watch } from 'vue';
+import { computed, onMounted } from 'vue';
 import AppHeader from './components/AppHeader.vue';
 import ChartsPanel from './components/ChartsPanel.vue';
 import ErrorMessage from './components/ErrorMessage.vue';
@@ -131,11 +132,12 @@ export default {
       return options;
     });
 
-    watch(selectedFile, async () => {
-      if (selectedFile.value) {
-        await loadResults();
+    const handleFileChange = async (newValue) => {
+      if (newValue) {
+        selectedFile.value = newValue;
+        await loadResults(newValue);
       }
-    });
+    };
 
     onMounted(async () => {
       await loadTransactionTypes();
@@ -155,6 +157,7 @@ export default {
       riskLevelOptions,
       typeOptions,
       fileOptions,
+      handleFileChange,
       ...statistics
     };
   }
