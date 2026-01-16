@@ -3,8 +3,8 @@
     <AppHeader :total-count="totalCount" :filtered-count="filteredCount" />
 
     <div class="max-w-7xl mx-auto px-6 py-8">
-      <div class="bg-zinc-900 rounded-2xl border border-zinc-800 shadow-2xl mb-8">
-        <div class="p-6 border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-zinc-800">
+      <div class="bg-zinc-900 rounded-2xl border border-zinc-800 shadow-2xl mb-8 animate-fade-in-up delay-100">
+        <div class="p-6 border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-zinc-800 animate-fade-in">
           <div class="flex flex-wrap gap-5 items-end">
             <FilterGroup
               id="result-file"
@@ -12,6 +12,7 @@
               v-model="selectedFile"
               :options="fileOptions"
               :placeholder="''"
+              :index="0"
               @update:modelValue="handleFileChange"
             />
             <FilterGroup
@@ -19,12 +20,14 @@
               label="Risk Level"
               v-model="selectedRiskLevel"
               :options="riskLevelOptions"
+              :index="1"
             />
             <FilterGroup
               id="transaction-type"
               label="Transaction Type"
               v-model="selectedType"
               :options="typeOptions"
+              :index="2"
             />
           </div>
         </div>
