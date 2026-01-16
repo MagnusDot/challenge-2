@@ -78,6 +78,7 @@ import StatisticsPanel from './components/StatisticsPanel.vue';
 import TransactionList from './components/TransactionList.vue';
 import { useStatistics } from './composables/useStatistics';
 import { useTransactions } from './composables/useTransactions';
+import { translateTransactionType } from './utils/translations';
 
 export default {
   name: 'App',
@@ -120,7 +121,7 @@ export default {
     const typeOptions = computed(() => {
       return availableTypes.value.map(type => ({
         value: type,
-        label: type || '(empty)'
+        label: translateTransactionType(type) || '(empty)'
       }));
     });
 

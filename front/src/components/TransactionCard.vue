@@ -7,19 +7,29 @@
       </span>
       <span class="score">Score: {{ transaction.risk_score }}</span>
       <span v-if="transaction.transaction_type" class="type">
-        {{ transaction.transaction_type }}
+        {{ translatedType }}
       </span>
     </div>
     <div v-if="transaction.reason" class="reason">
       {{ transaction.reason }}
     </div>
-    <div v-if="hasAnomalies" class="anomalies">
-      <span class="anomalies-badge">{{ transaction.anomalies.length }} anomaly{{ transaction.anomalies.length > 1 ? 'ies' : '' }}</span>
+    <div v-if="hasAnomalies" class="anomalies-section">
+      <div class="anomalies-header">
+        <span class="anomalies-icon">⚠️</span>
+        <span class="anomalies-title">{{ transaction.anomalies.length }} Anomal{{ transaction.anomalies.length > 1 ? 'ies' : 'y' }}</span>
+      </div>
+      <ul class="anomalies-list">
+        <li v-for="(anomaly, index) in transaction.anomalies" :key="index" class="anomaly-item">
+          {{ anomaly }}
+        </li>
+      </ul>
     </div>
   </div>
 </template>
 
 <script>
+import { translateTransactionType } from '../utils/translations';
+
 export default {
   name: 'TransactionCard',
   props: {
@@ -30,6 +40,9 @@ export default {
   },
   emits: ['click'],
   computed: {
+    translatedType() {
+      return translateTransactionType(this.transaction.transaction_type);
+    },
     hasAnomalies() {
       return this.transaction.anomalies && this.transaction.anomalies.length > 0;
     }
@@ -130,20 +143,47 @@ export default {
   letter-spacing: -0.01em;
 }
 
-.anomalies {
-  margin-top: 12px;
-  padding-top: 12px;
+.anomalies-section {
+  margin-top: 16px;
+  padding-top: 16px;
   border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.anomalies-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  background: rgba(255, 149, 0, 0.15);
-  color: #ff9500;
-  border-radius: 6px;
-  font-size: 0.75rem;
+.anomalies-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.anomalies-icon {
+  font-size: 1rem;
+}
+
+.anomalies-title {
+  font-size: 0.875rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  color: #ff9500;
+  letter-spacing: -0.01em;
+}
+
+.anomalies-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.anomaly-item {
+  padding: 10px 14px;
+  background: rgba(255, 149, 0, 0.08);
+  border-left: 3px solid #ff9500;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  color: #1d1d1f;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
 }
 </style>

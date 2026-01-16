@@ -65,7 +65,7 @@
           :key="type"
           class="type-item"
         >
-          <span class="type-name">{{ type }}</span>
+          <span class="type-name">{{ translateTransactionType(type) }}</span>
           <span class="type-count">
             {{ count }} ({{ filteredTypeStats[type] || 0 }})
           </span>
@@ -77,6 +77,7 @@
 
 <script>
 import StatsCard from './StatsCard.vue';
+import { translateTransactionType } from '../utils/translations';
 
 export default {
   name: 'StatisticsPanel',
@@ -152,7 +153,8 @@ export default {
   methods: {
     formatNumber(num) {
       return new Intl.NumberFormat('en-US').format(num);
-    }
+    },
+    translateTransactionType
   }
 };
 </script>

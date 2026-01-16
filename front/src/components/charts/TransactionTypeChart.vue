@@ -15,6 +15,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import { translateTransactionType } from '../../utils/translations';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, BarController, Tooltip, Legend);
 
@@ -42,7 +43,7 @@ export default {
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
 
-      const labels = entries.map(e => e.type);
+      const labels = entries.map(e => translateTransactionType(e.type));
       const data = entries.map(e => e.count);
 
       chartInstance = new ChartJS(chartCanvas.value, {
