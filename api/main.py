@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
-from api.routers import aggregated_transactions
+from api.routers import aggregated_transactions, results
 from api.utils.data_loader import set_dataset_folder, get_dataset_folder
 
 # Create FastAPI app
@@ -21,14 +21,15 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify exact origins
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include router
+# Include routers
 app.include_router(aggregated_transactions.router)
+app.include_router(results.router)
 
 
 @app.get("/", include_in_schema=False)

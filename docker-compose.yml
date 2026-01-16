@@ -9,9 +9,9 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      # Mount for development (hot reload)
       - ./api:/app/api
       - ./dataset:/app/dataset
+      - ./scripts:/app/scripts
     environment:
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=info
@@ -24,6 +24,27 @@ services:
       start_period: 10s
     networks:
       - reply_challenge_network
+
+  front:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    container_name: reply_challenge_front
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./front/src:/app/src
+      - ./front/index.html:/app/index.html
+      - ./front/vite.config.js:/app/vite.config.js
+      - ./front/package.json:/app/package.json
+    environment:
+      - NODE_ENV=development
+      - HOST=0.0.0.0
+    restart: unless-stopped
+    networks:
+      - reply_challenge_network
+    depends_on:
+      - api
 
 networks:
   reply_challenge_network:
