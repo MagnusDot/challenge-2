@@ -1,25 +1,42 @@
 <template>
-  <div class="transaction-card" @click="handleClick">
-    <div class="transaction-id">{{ transaction.transaction_id }}</div>
-    <div class="transaction-meta">
-      <span class="badge" :class="`badge-${transaction.risk_level}`">
+  <div
+    @click="handleClick"
+    class="p-6 bg-zinc-900 border border-zinc-800 rounded-xl cursor-pointer transition-all hover:border-blue-500/50 hover:shadow-xl hover:-translate-y-0.5"
+  >
+    <div class="font-mono text-xs text-zinc-500 mb-3 break-all font-medium">{{ transaction.transaction_id }}</div>
+    <div class="flex gap-3 items-center mb-3 flex-wrap">
+      <span
+        :class="{
+          'bg-green-500/20 text-green-400': transaction.risk_level === 'low',
+          'bg-orange-500/20 text-orange-400': transaction.risk_level === 'medium',
+          'bg-red-500/20 text-red-400': transaction.risk_level === 'high',
+          'bg-red-600/20 text-red-500': transaction.risk_level === 'critical'
+        }"
+        class="px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wider"
+      >
         {{ transaction.risk_level }}
       </span>
-      <span class="score">Score: {{ transaction.risk_score }}</span>
-      <span v-if="transaction.transaction_type" class="type">
+      <span class="text-sm text-zinc-500 font-medium">Score: {{ transaction.risk_score }}</span>
+      <span v-if="transaction.transaction_type" class="text-sm text-blue-400 font-medium">
         {{ translatedType }}
       </span>
     </div>
-    <div v-if="transaction.reason" class="reason">
+    <div v-if="transaction.reason" class="text-sm text-zinc-400 mt-3 leading-relaxed italic">
       {{ transaction.reason }}
     </div>
-    <div v-if="hasAnomalies" class="anomalies-section">
-      <div class="anomalies-header">
-        <span class="anomalies-icon">⚠️</span>
-        <span class="anomalies-title">{{ transaction.anomalies.length }} Anomal{{ transaction.anomalies.length > 1 ? 'ies' : 'y' }}</span>
+    <div v-if="hasAnomalies" class="mt-4 pt-4 border-t border-zinc-800">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-base">⚠️</span>
+        <span class="text-sm font-semibold text-orange-400">
+          {{ transaction.anomalies.length }} Anomal{{ transaction.anomalies.length > 1 ? 'ies' : 'y' }}
+        </span>
       </div>
-      <ul class="anomalies-list">
-        <li v-for="(anomaly, index) in transaction.anomalies" :key="index" class="anomaly-item">
+      <ul class="flex flex-col gap-2 list-none p-0 m-0">
+        <li
+          v-for="(anomaly, index) in transaction.anomalies"
+          :key="index"
+          class="p-3 bg-orange-500/10 border-l-4 border-orange-500 rounded-md text-xs text-white leading-relaxed"
+        >
           {{ anomaly }}
         </li>
       </ul>
@@ -54,136 +71,3 @@ export default {
   }
 };
 </script>
-
-<style scoped>
-.transaction-card {
-  padding: 20px 24px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.transaction-card:hover {
-  border-color: rgba(0, 122, 255, 0.3);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-  background: #fafafa;
-}
-
-.transaction-id {
-  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
-  font-size: 0.8125rem;
-  color: #86868b;
-  margin-bottom: 12px;
-  word-break: break-all;
-  letter-spacing: -0.01em;
-  font-weight: 500;
-}
-
-.transaction-meta {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-
-.badge {
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
-
-.badge-low {
-  background: rgba(52, 199, 89, 0.15);
-  color: #34c759;
-}
-
-.badge-medium {
-  background: rgba(255, 149, 0, 0.15);
-  color: #ff9500;
-}
-
-.badge-high {
-  background: rgba(255, 59, 48, 0.15);
-  color: #ff3b30;
-}
-
-.badge-critical {
-  background: rgba(142, 0, 0, 0.15);
-  color: #8e0000;
-}
-
-.score {
-  color: #86868b;
-  font-size: 0.875rem;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-}
-
-.type {
-  color: #007aff;
-  font-size: 0.875rem;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-}
-
-.reason {
-  color: #86868b;
-  font-size: 0.875rem;
-  margin-top: 12px;
-  line-height: 1.5;
-  font-style: italic;
-  letter-spacing: -0.01em;
-}
-
-.anomalies-section {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.anomalies-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.anomalies-icon {
-  font-size: 1rem;
-}
-
-.anomalies-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #ff9500;
-  letter-spacing: -0.01em;
-}
-
-.anomalies-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.anomaly-item {
-  padding: 10px 14px;
-  background: rgba(255, 149, 0, 0.08);
-  border-left: 3px solid #ff9500;
-  border-radius: 6px;
-  font-size: 0.8125rem;
-  color: #1d1d1f;
-  line-height: 1.4;
-  letter-spacing: -0.01em;
-}
-</style>

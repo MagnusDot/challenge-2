@@ -5,14 +5,14 @@
 </template>
 
 <script>
-import { ref, onMounted, watch } from 'vue';
 import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-  DoughnutController
+    ArcElement,
+    Chart as ChartJS,
+    DoughnutController,
+    Legend,
+    Tooltip
 } from 'chart.js';
+import { onMounted, ref, watch } from 'vue';
 
 ChartJS.register(ArcElement, Tooltip, Legend, DoughnutController);
 

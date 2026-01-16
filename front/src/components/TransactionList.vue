@@ -1,16 +1,19 @@
 <template>
-  <div class="transaction-list-container">
-    <div class="list-header">
-      <h2>Filtered Transaction IDs</h2>
-      <button @click="handleCopyAll" class="copy-button">
+  <div class="p-8">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl text-white font-semibold">Filtered Transaction IDs</h2>
+      <button
+        @click="handleCopyAll"
+        class="px-5 py-2.5 bg-blue-500 text-white rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-blue-600 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0"
+      >
         Copy All IDs
       </button>
     </div>
 
-    <div v-if="transactions.length === 0" class="no-results">
+    <div v-if="transactions.length === 0" class="text-center py-16 text-zinc-500 text-base">
       No transactions match the selected filters.
     </div>
-    <div v-else class="transaction-list">
+    <div v-else class="grid gap-3">
       <TransactionCard
         v-for="transaction in transactions"
         :key="transaction.transaction_id"
@@ -46,60 +49,3 @@ export default {
   }
 };
 </script>
-
-<style scoped>
-.transaction-list-container {
-  padding: 32px;
-}
-
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.list-header h2 {
-  color: #1d1d1f;
-  font-size: 1.5rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-.copy-button {
-  padding: 10px 20px;
-  background: #007aff;
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  letter-spacing: -0.01em;
-  font-family: inherit;
-}
-
-.copy-button:hover {
-  background: #0051d5;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
-}
-
-.copy-button:active {
-  transform: translateY(0);
-}
-
-.no-results {
-  text-align: center;
-  padding: 60px 20px;
-  color: #86868b;
-  font-size: 1rem;
-  letter-spacing: -0.01em;
-}
-
-.transaction-list {
-  display: grid;
-  gap: 12px;
-}
-</style>

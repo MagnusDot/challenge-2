@@ -1,7 +1,7 @@
 <template>
-  <div class="statistics-panel">
-    <h3 class="statistics-title">Statistics</h3>
-    <div class="statistics-grid">
+  <div class="p-8 bg-zinc-900 border-b border-zinc-800">
+    <h3 class="text-2xl text-white mb-6 font-semibold">Statistics</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
       <StatsCard
         label="Total Transactions"
         :value="totalCount"
@@ -34,39 +34,44 @@
       />
     </div>
 
-    <div class="risk-level-breakdown">
-      <h4 class="breakdown-title">Risk Level Distribution</h4>
-      <div class="breakdown-grid">
+    <div class="mt-8 pt-8 border-t border-zinc-800">
+      <h4 class="text-lg text-white mb-5 font-semibold">Risk Level Distribution</h4>
+      <div class="flex flex-col gap-4">
         <div
           v-for="(count, level) in riskLevelStats"
           :key="level"
-          class="breakdown-item"
+          class="flex items-center gap-4"
         >
-          <div class="breakdown-label">{{ level }}</div>
-          <div class="breakdown-bar-container">
+          <div class="min-w-[90px] font-medium capitalize text-sm text-zinc-400">{{ level }}</div>
+          <div class="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
             <div
-              class="breakdown-bar"
-              :class="`breakdown-bar-${level}`"
+              :class="{
+                'bg-green-500': level === 'low',
+                'bg-orange-500': level === 'medium',
+                'bg-red-500': level === 'high',
+                'bg-red-600': level === 'critical'
+              }"
+              class="h-full rounded-full transition-all duration-500"
               :style="{ width: `${(count / totalCount) * 100}%` }"
             ></div>
           </div>
-          <div class="breakdown-value">
+          <div class="min-w-[100px] text-right text-sm text-zinc-500 font-medium">
             {{ count }} ({{ filteredRiskLevelStats[level] }})
           </div>
         </div>
       </div>
     </div>
 
-    <div v-if="Object.keys(typeStats).length > 0" class="type-breakdown">
-      <h4 class="breakdown-title">Transaction Type Distribution</h4>
-      <div class="type-list">
+    <div v-if="Object.keys(typeStats).length > 0" class="mt-8 pt-8 border-t border-zinc-800">
+      <h4 class="text-lg text-white mb-5 font-semibold">Transaction Type Distribution</h4>
+      <div class="flex flex-col gap-2">
         <div
           v-for="(count, type) in typeStats"
           :key="type"
-          class="type-item"
+          class="flex justify-between items-center px-4 py-3 bg-zinc-800 rounded-lg border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-600 transition-all"
         >
-          <span class="type-name">{{ translateTransactionType(type) }}</span>
-          <span class="type-count">
+          <span class="font-medium text-sm text-white">{{ translateTransactionType(type) }}</span>
+          <span class="text-sm text-blue-400 font-semibold">
             {{ count }} ({{ filteredTypeStats[type] || 0 }})
           </span>
         </div>
@@ -76,8 +81,8 @@
 </template>
 
 <script>
-import StatsCard from './StatsCard.vue';
 import { translateTransactionType } from '../utils/translations';
+import StatsCard from './StatsCard.vue';
 
 export default {
   name: 'StatisticsPanel',
@@ -158,140 +163,3 @@ export default {
   }
 };
 </script>
-
-<style scoped>
-.statistics-panel {
-  background: #fafafa;
-  border-radius: 0;
-  padding: 32px;
-  margin: 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.statistics-title {
-  font-size: 1.5rem;
-  color: #1d1d1f;
-  margin-bottom: 24px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-.statistics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 16px;
-  margin-bottom: 32px;
-}
-
-.risk-level-breakdown,
-.type-breakdown {
-  margin-top: 32px;
-  padding-top: 32px;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.breakdown-title {
-  font-size: 1.125rem;
-  color: #1d1d1f;
-  margin-bottom: 20px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.breakdown-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.breakdown-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.breakdown-label {
-  min-width: 90px;
-  font-weight: 500;
-  text-transform: capitalize;
-  color: #1d1d1f;
-  font-size: 0.875rem;
-  letter-spacing: -0.01em;
-}
-
-.breakdown-bar-container {
-  flex: 1;
-  height: 8px;
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 4px;
-  overflow: hidden;
-  position: relative;
-}
-
-.breakdown-bar {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.breakdown-bar-low {
-  background: #34c759;
-}
-
-.breakdown-bar-medium {
-  background: #ff9500;
-}
-
-.breakdown-bar-high {
-  background: #ff3b30;
-}
-
-.breakdown-bar-critical {
-  background: #8e0000;
-}
-
-.breakdown-value {
-  min-width: 100px;
-  text-align: right;
-  font-size: 0.875rem;
-  color: #86868b;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-}
-
-.type-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.type-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  background: #ffffff;
-  border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.type-item:hover {
-  background: #f5f5f7;
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
-.type-name {
-  font-weight: 500;
-  color: #1d1d1f;
-  font-size: 0.875rem;
-  letter-spacing: -0.01em;
-}
-
-.type-count {
-  font-size: 0.875rem;
-  color: #007aff;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-</style>

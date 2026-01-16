@@ -1,7 +1,7 @@
 <template>
-  <div class="error-container">
-    <div class="error-icon">⚠️</div>
-    <p class="error-message">{{ message }}</p>
+  <div class="flex flex-col items-center justify-center py-20 gap-4">
+    <div class="text-5xl">⚠️</div>
+    <p class="text-red-400 text-lg text-center font-medium">{{ message }}</p>
   </div>
 </template>
 
@@ -16,26 +16,3 @@ export default {
   }
 };
 </script>
-
-<style scoped>
-.error-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  gap: 16px;
-}
-
-.error-icon {
-  font-size: 3rem;
-}
-
-.error-message {
-  color: #ff3b30;
-  font-size: 1.125rem;
-  text-align: center;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-}
-</style>

@@ -1,9 +1,9 @@
 <template>
-  <div class="stats-card">
-    <div class="stats-card-content">
-      <div class="stats-card-label">{{ label }}</div>
-      <div class="stats-card-value">{{ value }}</div>
-      <div v-if="subtitle" class="stats-card-subtitle">{{ subtitle }}</div>
+  <div class="p-6 bg-zinc-900 rounded-xl border border-zinc-800 transition-all hover:border-zinc-700 hover:-translate-y-0.5 hover:shadow-xl">
+    <div class="flex flex-col gap-1">
+      <div class="text-xs text-zinc-500 uppercase tracking-wider font-medium">{{ label }}</div>
+      <div class="text-3xl font-bold text-white">{{ value }}</div>
+      <div v-if="subtitle" class="text-xs text-zinc-500 mt-1">{{ subtitle }}</div>
     </div>
   </div>
 </template>
@@ -31,49 +31,3 @@ export default {
   }
 };
 </script>
-
-<style scoped>
-.stats-card {
-  padding: 20px 24px;
-  background: #ffffff;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.stats-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
-.stats-card-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.stats-card-label {
-  font-size: 0.8125rem;
-  color: #86868b;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  text-transform: uppercase;
-}
-
-.stats-card-value {
-  font-size: 2rem;
-  font-weight: 600;
-  color: #1d1d1f;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-}
-
-.stats-card-subtitle {
-  font-size: 0.75rem;
-  color: #86868b;
-  margin-top: 2px;
-  font-weight: 400;
-}
-</style>

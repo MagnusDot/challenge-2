@@ -5,16 +5,16 @@
 </template>
 
 <script>
-import { ref, onMounted, watch, computed } from 'vue';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  BarController,
-  Tooltip,
-  Legend
+    BarController,
+    BarElement,
+    CategoryScale,
+    Chart as ChartJS,
+    Legend,
+    LinearScale,
+    Tooltip
 } from 'chart.js';
+import { computed, onMounted, ref, watch } from 'vue';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, BarController, Tooltip, Legend);
 
