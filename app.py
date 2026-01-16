@@ -23,16 +23,19 @@ async def main():
     
     openai_api_key = os.getenv('OPENAI_API_KEY')
     google_api_key = os.getenv('GOOGLE_API_KEY')
+    openrouter_api_key = os.getenv('OPENROUTER_API_KEY')
     
-    if not openai_api_key and not google_api_key:
+    if not openai_api_key and not google_api_key and not openrouter_api_key:
         print("❌ Error: No API key found in .env")
-        print("💡 Add OPENAI_API_KEY or GOOGLE_API_KEY to your .env file")
+        print("💡 Add OPENROUTER_API_KEY, OPENAI_API_KEY or GOOGLE_API_KEY to your .env file")
         sys.exit(1)
     
     if openai_api_key:
         os.environ['OPENAI_API_KEY'] = openai_api_key
     if google_api_key:
         os.environ['GOOGLE_API_KEY'] = google_api_key
+    if openrouter_api_key:
+        os.environ['OPENROUTER_API_KEY'] = openrouter_api_key
     
     print(f"\n📂 Loading transactions from: {DATASET_PATH}")
     print(f"📁 Dataset folder: {DATASET_FOLDER}")

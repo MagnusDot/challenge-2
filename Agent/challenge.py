@@ -38,8 +38,8 @@ def create_challenge_agent(model: str = "openai/gpt-4.1") -> Agent:
     # Load system prompt from markdown file
     system_prompt = load_system_prompt()
     
-    # Use LiteLLM for OpenAI models, otherwise use model string directly
-    if model.startswith("openai/"):
+    # Use LiteLLM for OpenAI and OpenRouter models, otherwise use model string directly
+    if model.startswith("openai/") or model.startswith("openrouter/"):
         llm_model = LiteLlm(
             model=model,
             parallel_tool_calls=False,  # Enable parallel tool calls

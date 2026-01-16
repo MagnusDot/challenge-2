@@ -42,7 +42,7 @@ web PORT="8001":
 env:
     cp .env.example .env
     @echo "✅ .env file created"
-    @echo "⚠️  Don't forget to add your OPENAI_API_KEY"
+    @echo "⚠️  Don't forget to add your OPENROUTER_API_KEY"
 
 # Setup everything (venv, install, env)
 setup:
@@ -52,7 +52,7 @@ setup:
     @echo ""
     @echo "🎉 Setup complete!"
     @echo "📝 Next steps:"
-    @echo "   1. Add your OPENAI_API_KEY or GOOGLE_API_KEY to .env"
+    @echo "   1. Add your OPENROUTER_API_KEY to .env"
     @echo "   2. Run: just run (analyzes transactions with 50 concurrent requests)"
 
 # Clean virtual environment
@@ -157,14 +157,14 @@ docker-restart:
 api-health:
     @curl -f http://localhost:8000/health || echo "❌ API not responding"
 
-# Check if .env has OPENAI_API_KEY set
+# Check if .env has OPENROUTER_API_KEY set
 check-env:
     @if [ ! -f ".env" ]; then echo "❌ .env file not found"; exit 1; fi
-    @if grep -q "OPENAI_API_KEY=$" .env || ! grep -q "OPENAI_API_KEY" .env; then \
-        echo "❌ OPENAI_API_KEY not set in .env"; \
+    @if grep -q "OPENROUTER_API_KEY=$" .env || ! grep -q "OPENROUTER_API_KEY" .env; then \
+        echo "❌ OPENROUTER_API_KEY not set in .env"; \
         exit 1; \
     fi
-    @echo "✅ OPENAI_API_KEY is set"
+    @echo "✅ OPENROUTER_API_KEY is set"
 
 # Run app.py with environment check
 run-safe: check-env

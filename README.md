@@ -42,10 +42,14 @@ python app.py
 The script uses the following environment variables (defined in `.env`):
 
 ### API Keys (required)
-- `OPENAI_API_KEY` or `GOOGLE_API_KEY`: API key for the LLM model (at least one required)
+- `OPENROUTER_API_KEY`: API key for OpenRouter (recommended)
+- Alternative: `OPENAI_API_KEY` or `GOOGLE_API_KEY` for direct API access
 
 ### Model Configuration
-- `MODEL`: Model to use (default: `openai/gpt-4.1`)
+- `MODEL`: Model to use (default: `openrouter/openai/gpt-4.1`)
+  - OpenRouter format: `openrouter/provider/model` (e.g., `openrouter/openai/gpt-4o`, `openrouter/anthropic/claude-3.5-sonnet`)
+  - Direct OpenAI format: `openai/gpt-4.1`
+  - Gemini format: `gemini-2.0-flash-exp`
 
 ### Data Configuration
 - `DATASET_FOLDER`: Dataset folder to analyze (default: `public 4`)
@@ -64,9 +68,8 @@ The script uses the following environment variables (defined in `.env`):
 
 ### Example `.env` file
 ```env
-OPENAI_API_KEY=sk-...
-GOOGLE_API_KEY=...
-MODEL=openai/gpt-4.1
+OPENROUTER_API_KEY=sk-or-v1-...
+MODEL=openrouter/openai/gpt-4.1
 DATASET_FOLDER=public 4
 SYSTEM_PROMPT_FILE=system_prompt_v2.md
 MAX_CONCURRENT_REQUESTS=50
