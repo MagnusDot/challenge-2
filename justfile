@@ -107,6 +107,17 @@ normalize-files-preview:
 normalize-files:
     PYTHONPATH=. .venv/bin/python scripts/normalize_dataset_files.py
 
+# ==== Evaluation Commands ====
+
+# Evaluate predictions against ground truth
+# Output saved to dataset/evals/<ground_truth_filename>.json
+# Usage: just eval predictions.json dataset/ground_truth/public_1.csv
+eval PREDICTIONS GROUND_TRUTH:
+    @mkdir -p dataset/evals
+    @echo "📊 Evaluating predictions..."
+    PYTHONPATH=. .venv/bin/python scripts/evaluate_results.py -p {{PREDICTIONS}} -g {{GROUND_TRUTH}} -o dataset/evals/$(basename {{GROUND_TRUTH}} .csv).json
+    @echo "💾 Results saved to dataset/evals/$(basename {{GROUND_TRUTH}} .csv).json"
+
 # ==== API Commands ====
 
 # Run API locally (development)
