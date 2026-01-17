@@ -3,7 +3,7 @@
 import json
 import asyncio
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ..state import FraudState
 
@@ -198,7 +198,7 @@ def save_result_to_json(state: FraudState) -> FraudState:
     # Préparation du résultat (pour les éléments suspects)
     result = {
         "transaction_id": transaction_id,
-        "timestamp": datetime.now(datetime.timezone.utc).isoformat().replace('+00:00', 'Z'),
+        "timestamp": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
         "risk_score": risk_score,
         "decision": state.get("decision", "SUSPECT"),  # Tag SUSPECT pour tri ultérieur
         "features": state.get("aggregated_features", {}),

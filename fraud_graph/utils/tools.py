@@ -1,7 +1,7 @@
 """Outils pour l'agent LangGraph."""
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from Agent.helpers.http_client import make_api_request
@@ -66,4 +66,4 @@ async def get_current_time(city: Optional[str] = None) -> str:
     Returns:
         L'heure actuelle au format ISO 8601 (UTC)
     """
-    return datetime.now(datetime.timezone.utc).isoformat().replace('+00:00', 'Z')
+    return datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')

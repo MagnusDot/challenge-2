@@ -723,12 +723,12 @@ async def get_batch_aggregated_transactions(
         if recipient and recipient.biotag:
             recipient_sms = [s for s in sms_list if recipient.biotag.lower() in s.id_user.lower()]
         
-        # Filtrer par timestamp (3 heures avant la transaction)
-        if transaction.timestamp:
-            sender_emails = filter_emails_by_timestamp(sender_emails, transaction.timestamp, time_window_hours=3)
-            sender_sms = filter_sms_by_timestamp(sender_sms, transaction.timestamp, time_window_hours=3)
-            recipient_emails = filter_emails_by_timestamp(recipient_emails, transaction.timestamp, time_window_hours=3)
-            recipient_sms = filter_sms_by_timestamp(recipient_sms, transaction.timestamp, time_window_hours=3)
+        # Filtre temporel désactivé : on retourne tous les emails/SMS pour permettre la détection de time_correlation
+        # if transaction.timestamp:
+        #     sender_emails = filter_emails_by_timestamp(sender_emails, transaction.timestamp, time_window_hours=3)
+        #     sender_sms = filter_sms_by_timestamp(sender_sms, transaction.timestamp, time_window_hours=3)
+        #     recipient_emails = filter_emails_by_timestamp(recipient_emails, transaction.timestamp, time_window_hours=3)
+        #     recipient_sms = filter_sms_by_timestamp(recipient_sms, transaction.timestamp, time_window_hours=3)
         
         # Extraire le texte depuis le HTML pour les emails
         sender_emails = [
