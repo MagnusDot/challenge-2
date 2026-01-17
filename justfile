@@ -87,6 +87,26 @@ freeze:
     .venv/bin/pip freeze > requirements.txt
     @echo "✅ Dependencies frozen to requirements.txt"
 
+# ==== Dataset Commands ====
+
+# Convert CSV dataset to JSON (uses DATASET_FOLDER from .env)
+csv-to-json:
+    PYTHONPATH=. .venv/bin/python scripts/convert_csv_to_json.py --pretty
+    @echo "💡 JSON file created in dataset folder (see DATASET_FOLDER in .env)"
+
+# Convert CSV dataset to JSON (compact format, no indentation)
+csv-to-json-compact:
+    PYTHONPATH=. .venv/bin/python scripts/convert_csv_to_json.py
+    @echo "💡 JSON file created in dataset folder (see DATASET_FOLDER in .env)"
+
+# Normalize dataset file names (remove timestamps and numbers) - preview only
+normalize-files-preview:
+    PYTHONPATH=. .venv/bin/python scripts/normalize_dataset_files.py --dry-run
+
+# Normalize dataset file names (remove timestamps and numbers)
+normalize-files:
+    PYTHONPATH=. .venv/bin/python scripts/normalize_dataset_files.py
+
 # ==== API Commands ====
 
 # Run API locally (development)
