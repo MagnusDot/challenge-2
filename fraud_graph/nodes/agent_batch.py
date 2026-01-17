@@ -84,13 +84,16 @@ async def analyze_frauds_with_agent(state: FraudState) -> FraudState:
                 batch_status[batch_num]['error'] = error
     
     async def print_status_summary():
-        while completed_batches < total_batches:
-            await asyncio.sleep(5)
+        while True:
+            await asyncio.sleep(3)
             async with status_lock:
                 running = sum(1 for s in batch_status.values() if s['status'] == 'running')
                 completed = sum(1 for s in batch_status.values() if s['status'] == 'completed')
                 errors = sum(1 for s in batch_status.values() if s['status'] == 'error')
                 pending = total_batches - completed - errors - running
+                
+                if completed_batches >= total_batches:
+                    break
                 
                 if running > 0 or pending > 0:
                     running_batches = [i for i, s in batch_status.items() if s['status'] == 'running']

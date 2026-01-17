@@ -1,20 +1,43 @@
 import os
+import sys
 import logging
 from pathlib import Path
 from functools import lru_cache
 from google.adk.agents.llm_agent import Agent
 from google.adk.models.lite_llm import LiteLlm
 
-from .tools import get_transaction_aggregated_batch
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from fraud_graph.utils.output_filter import setup_output_filter
 
-logging.getLogger("LiteLLM").setLevel(logging.WARNING)
-logging.getLogger("httpx").setLevel(logging.WARNING)
+from .tools import (
+    get_transaction_aggregated_batch,
+    report_fraud,
+    check_time_correlation,
+    check_new_merchant,
+    check_location_anomaly,
+    check_withdrawal_pattern,
+    check_phishing_indicators,
+)
+
+setup_output_filter()
+
+logging.getLogger("LiteLLM").setLevel(logging.ERROR)
+logging.getLogger("httpx").setLevel(logging.ERROR)
+logging.getLogger("httpcore").setLevel(logging.ERROR)
+
+os.environ.setdefault("LITELLM_LOG", "ERROR")
+os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "")
 
 
 @lru_cache(maxsize=1)
 def load_system_prompt() -> str:
-    prompt_file = os.getenv('FRAUD_AGENT_PROMPT_FILE', 'prompt.md')
+    # Try optimized version first, fallback to full version
+    prompt_file = os.getenv('FRAUD_AGENT_PROMPT_FILE', 'system_prompt_optimized.md')
     prompt_path = Path(__file__).parent / prompt_file
+    
+    # Fallback to system_prompt.md if optimized doesn't exist
+    if not prompt_path.exists() and prompt_file == 'system_prompt_optimized.md':
+        prompt_path = Path(__file__).parent / 'system_prompt.md'
     
     if not prompt_path.exists():
         raise FileNotFoundError(
@@ -29,7 +52,7 @@ def load_system_prompt() -> str:
 @lru_cache(maxsize=1)
 def create_fraud_agent() -> Agent:
     system_prompt = load_system_prompt()
-    model = os.getenv('MODEL', 'openrouter/mistralai/ministral-14b-2512')
+    model = os.getenv('MODEL', 'openrouter/openai/gpt-4.1')
     openrouter_key = os.getenv('OPENROUTER_API_KEY')
     
     if not openrouter_key:
@@ -56,6 +79,12 @@ def create_fraud_agent() -> Agent:
         instruction=system_prompt,
         tools=[
             get_transaction_aggregated_batch,
+            report_fraud,
+            check_time_correlation,
+            check_new_merchant,
+            check_location_anomaly,
+            check_withdrawal_pattern,
+            check_phishing_indicators,
         ],
     )
     

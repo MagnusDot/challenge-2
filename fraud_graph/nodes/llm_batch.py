@@ -48,11 +48,17 @@ async def analyze_batch_with_agent_async(
     
     user_prompt = f"""Analyze {len(transaction_ids)} transactions.
 
-STEP 1: Call get_transaction_aggregated_batch('{transaction_ids_json}') ONCE.
+STEP 1: Call get_transaction_aggregated_batch('{transaction_ids_json}') ONCE to get all transaction data.
 STEP 2: Analyze all transactions from the returned data.
-STEP 3: Follow the output format specified in your instructions.
+STEP 3: For each transaction you identify as FRAUDULENT, call report_fraud(transaction_id, reasons) with:
+   - transaction_id: The UUID of the fraudulent transaction
+   - reasons: A comma-separated list of fraud indicators (e.g., "account_drained,time_correlation,new_merchant")
 
-CRITICAL: Only ONE tool call to get_transaction_aggregated_batch. Use the batch endpoint."""
+CRITICAL RULES:
+- Only ONE tool call to get_transaction_aggregated_batch. Use the batch endpoint.
+- Call report_fraud() for EACH fraudulent transaction you find (you can call it multiple times)
+- If no frauds detected, do NOT call report_fraud() at all
+- Do NOT output text - use the report_fraud tool instead"""
     
     prompt = f"""{system_prompt}
 
@@ -67,6 +73,7 @@ CRITICAL: Only ONE tool call to get_transaction_aggregated_batch. Use the batch 
     
     response_text = ''
     tool_calls_count = 0
+    fraud_reports = []
     token_usage = {
         'prompt_tokens': 0,
         'completion_tokens': 0,
@@ -79,15 +86,49 @@ CRITICAL: Only ONE tool call to get_transaction_aggregated_batch. Use the batch 
             session_id=session.id,
             new_message=user_message
         ):
+            event_type = type(event).__name__
+            
+            if 'ToolCall' in event_type or 'tool_call' in event_type.lower():
+                tool_name = getattr(event, 'function_name', getattr(event, 'name', getattr(event, 'function', None)))
+                if tool_name == 'report_fraud':
+                    args = {}
+                    if hasattr(event, 'args'):
+                        args = event.args
+                    elif hasattr(event, 'arguments'):
+                        if isinstance(event.arguments, dict):
+                            args = event.arguments
+                        elif isinstance(event.arguments, str):
+                            try:
+                                args = json.loads(event.arguments)
+                            except:
+                                pass
+                    elif hasattr(event, 'function_call'):
+                        func_call = event.function_call
+                        if hasattr(func_call, 'args'):
+                            args = func_call.args
+                        elif hasattr(func_call, 'arguments'):
+                            if isinstance(func_call.arguments, dict):
+                                args = func_call.arguments
+                            elif isinstance(func_call.arguments, str):
+                                try:
+                                    args = json.loads(func_call.arguments)
+                                except:
+                                    pass
+                    
+                    if isinstance(args, dict):
+                        transaction_id = args.get('transaction_id', '')
+                        reasons_str = args.get('reasons', '')
+                        if transaction_id:
+                            fraud_reports.append({
+                                'transaction_id': transaction_id,
+                                'reasons': reasons_str
+                            })
+            
             response_text, token_usage, tool_calls_count = process_event(
                 event, response_text, token_usage, tool_calls_count, batch_num
             )
         
         response_text = response_text.strip()
-        if response_text.startswith('```'):
-            lines = response_text.split('\n')
-            response_text = '\n'.join([l for l in lines if not l.strip().startswith('```')])
-            response_text = response_text.strip()
         
         if token_usage['total_tokens'] == 0:
             estimated_prompt = estimate_tokens(user_prompt)
@@ -102,32 +143,23 @@ CRITICAL: Only ONE tool call to get_transaction_aggregated_batch. Use the batch 
             token_usage['estimated'] = False
         
         frauds_detected = []
-        if response_text:
-            for line in response_text.split('\n'):
-                line = line.strip()
-                if not line or '|' not in line:
-                    continue
-                
-                parts = [p.strip() for p in line.split('|')]
-                if len(parts) >= 2:
-                    transaction_id = parts[0].strip()
-                    reasons_str = parts[1].strip()
-                    
-                    reasons = []
-                    reasons_str = reasons_str.strip()
-                    if reasons_str.startswith('[') and reasons_str.endswith(']'):
-                        reasons_str = reasons_str[1:-1].strip()
-                        if reasons_str:
-                            reasons = [r.strip() for r in reasons_str.split(',') if r.strip()]
-                    
-                    if transaction_id and reasons:
-                        frauds_detected.append({
-                            'transaction_id': transaction_id,
-                            'risk_level': 'critical',
-                            'risk_score': 100,
-                            'reason': '; '.join(reasons) if reasons else 'Fraud detected',
-                            'anomalies': reasons if reasons else ['Fraud detected']
-                        })
+        
+        for report in fraud_reports:
+            transaction_id = report['transaction_id']
+            reasons_str = report['reasons']
+            
+            reasons = []
+            if reasons_str:
+                reasons = [r.strip() for r in reasons_str.split(',') if r.strip()]
+            
+            if transaction_id:
+                frauds_detected.append({
+                    'transaction_id': transaction_id,
+                    'risk_level': 'critical',
+                    'risk_score': 100,
+                    'reason': '; '.join(reasons) if reasons else 'Fraud detected',
+                    'anomalies': reasons if reasons else ['Fraud detected']
+                })
         
         batch_end_time = datetime.now()
         batch_duration = (batch_end_time - batch_start_time).total_seconds()

@@ -124,6 +124,13 @@ normalize-files:
 
 # ==== Evaluation Commands ====
 
+# Compare final_fraud.json with ground truth public_1.csv
+# Shows TP, FP, FN, Precision, Recall, F1-Score
+compare:
+    @echo "📊 Comparing final_fraud.json with ground truth..."
+    PYTHONPATH=. .venv/bin/python scripts/compare_final_fraud.py
+
+
 # Evaluate predictions against ground truth
 # Output saved to dataset/evals/<ground_truth_filename>.json
 # Usage: just eval predictions.json dataset/ground_truth/public_1.csv

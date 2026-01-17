@@ -1,0 +1,55 @@
+# Cursor Rules - Prompt Optimization Strategy
+
+## Prompt Design Philosophy: Minimal to Extended
+
+### Core Principle
+**Start with the minimum necessary information and expand only when needed.**
+
+### Rules
+
+1. **Initial Prompt (Minimal)**
+   - Core identity and mission only (2-3 sentences)
+   - List of available tools with brief descriptions
+   - Basic workflow (4-5 steps)
+   - Essential fraud detection rules (4 main patterns, bullet points only)
+   - Critical constraints (what NOT to do, 5-6 items max)
+
+2. **Expansion Criteria**
+   Add details ONLY when:
+   - Agent consistently fails on specific patterns (>3 failures)
+   - False positives appear for specific scenarios (>2 false positives)
+   - Agent asks for clarification repeatedly (same question 3+ times)
+   - New tools are added that need explanation
+   - Performance metrics show degradation
+
+3. **Structure Guidelines**
+   - Keep sections short and focused (max 10 lines per section)
+   - Use bullet points, not paragraphs
+   - Examples only when absolutely necessary
+   - Remove redundant information immediately
+   - One idea per bullet point
+
+4. **Maintenance Protocol**
+   - Review prompt length after each major change
+   - Remove unused sections monthly
+   - Consolidate similar rules immediately
+   - Target: < 200 lines for initial version
+   - Maximum: < 300 lines (if exceeded, refactor)
+
+5. **Tool-First Approach**
+   - Prefer tools over detailed instructions
+   - Let tools do the heavy lifting (calculations, checks)
+   - Prompt should guide tool usage, not duplicate tool logic
+   - If logic is in a tool, remove it from prompt
+
+6. **Version Control**
+   - Keep minimal version as `system_prompt_optimized.md`
+   - Current full version as `system_prompt.md`
+   - Test minimal version first, expand only if needed
+   - Document why each expansion was made
+
+### Current Status
+- **Full prompt**: `Agent/system_prompt.md` (478 lines - TOO LONG)
+- **Optimized prompt**: `Agent/system_prompt_optimized.md` (80 lines)
+- **Target**: Use optimized version, expand only if performance degrades
+- **Strategy**: Test minimal version first, add details only when necessary

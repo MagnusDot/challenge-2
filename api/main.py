@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
-from api.routers import aggregated_transactions, results
+from api.routers import aggregated_transactions, results, fraud_tools
 from api.utils.data_loader import set_dataset_folder, get_dataset_folder
 
 app = FastAPI(
@@ -23,6 +23,7 @@ app.add_middleware(
 
 app.include_router(aggregated_transactions.router)
 app.include_router(results.router)
+app.include_router(fraud_tools.router)
 
 @app.get("/", include_in_schema=False)
 async def root():
