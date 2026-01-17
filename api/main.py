@@ -1,7 +1,3 @@
-"""
-FastAPI main application with strict Pydantic validation.
-"""
-
 from fastapi import FastAPI, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
@@ -9,7 +5,6 @@ from fastapi.responses import RedirectResponse
 from api.routers import aggregated_transactions, results
 from api.utils.data_loader import set_dataset_folder, get_dataset_folder
 
-# Create FastAPI app
 app = FastAPI(
     title="Reply Challenge API",
     description="API agrégée pour l'analyse de transactions avec toutes les données associées",
@@ -18,7 +13,6 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -27,30 +21,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
 app.include_router(aggregated_transactions.router)
 app.include_router(results.router)
 
-
 @app.get("/", include_in_schema=False)
 async def root():
-    """Redirect root to docs."""
-    return RedirectResponse(url="/docs")
 
+    return RedirectResponse(url="/docs")
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
+
     return {
         "status": "healthy",
         "version": "1.0.0",
         "message": "Reply Challenge API is running"
     }
 
-
 @app.get("/stats")
 async def get_global_stats():
-    """Statistiques globales sur tous les datasets."""
+
     from api.utils.data_loader import (
         load_users,
         load_transactions,
@@ -58,7 +48,7 @@ async def get_global_stats():
         load_sms,
         load_emails
     )
-    
+
     try:
         return {
             "users": len(load_users()),
@@ -75,24 +65,18 @@ async def get_global_stats():
             detail=f"Error loading data from dataset '{get_dataset_folder()}': {str(e)}"
         )
 
-
 @app.get("/dataset/current")
 async def get_current_dataset():
-    """Récupère le dataset actuellement actif.
-    
-    Returns:
-        Nom du dataset actif et informations de diagnostic
-    """
+
     from api.utils.data_loader import PROJECT_ROOT, get_dataset_dir
-    
+
     dataset_folder = get_dataset_folder()
     dataset_dir = get_dataset_dir()
-    
-    # Check if dataset directory exists
+
     exists = dataset_dir.exists()
     required_file = dataset_dir / "transactions_dataset.json"
     required_file_exists = required_file.exists()
-    
+
     return {
         "dataset_folder": dataset_folder,
         "status": "active",
@@ -106,7 +90,6 @@ async def get_current_dataset():
         ] if (PROJECT_ROOT / "dataset").exists() else []
     }
 
-
 @app.post("/dataset/{folder_name}")
 async def switch_dataset(
     folder_name: str = Path(
@@ -115,36 +98,21 @@ async def switch_dataset(
         example="public 2"
     )
 ):
-    """Change le dataset actif et vide le cache.
-    
-    Cet endpoint permet de changer dynamiquement le dataset utilisé par l'API.
-    Tous les caches sont vidés automatiquement lors du changement.
-    
-    Args:
-        folder_name: Nom du dossier dataset (ex: "public 2", "public 3")
-        
-    Returns:
-        Confirmation du changement de dataset
-        
-    Raises:
-        HTTPException: 400 si le dataset n'existe pas ou est invalide
-    """
+
     from api.utils.data_loader import PROJECT_ROOT
-    
+
     try:
         old_folder = get_dataset_folder()
         set_dataset_folder(folder_name)
-        
-        # Verify that data can be loaded
+
         from api.utils.data_loader import (
             load_transactions,
             load_users
         )
-        
-        # Try to load a small amount of data to verify it works
+
         transactions = load_transactions()
         users = load_users()
-        
+
         return {
             "status": "success",
             "message": f"Dataset changé vers '{folder_name}'",
@@ -171,7 +139,6 @@ async def switch_dataset(
             detail=f"Error switching dataset: {str(e)}"
         )
 
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
@@ -180,4 +147,3 @@ if __name__ == "__main__":
         port=8000,
         reload=True
     )
-

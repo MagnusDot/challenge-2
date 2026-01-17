@@ -1,7 +1,3 @@
-"""
-Routers package - API v2.0.
-"""
-
 from . import aggregated_transactions
 
 __all__ = [

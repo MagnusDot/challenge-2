@@ -1,7 +1,3 @@
-"""
-Helper utilities for agent tools.
-"""
-
 from .http_client import make_api_request, format_filters_description
 from .models import (
     GetUsersToolInput,
@@ -20,6 +16,3 @@ __all__ = [
     'GetSmsToolInput',
     'GetEmailsToolInput',
 ]
-
-
-

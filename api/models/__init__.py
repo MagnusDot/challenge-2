@@ -1,7 +1,3 @@
-"""
-Pydantic models for API validation.
-"""
-
 from .user import User, UserResidence
 from .transaction import Transaction
 from .location import Location
@@ -18,4 +14,3 @@ __all__ = [
     'Email',
     'AggregatedTransaction',
 ]
-

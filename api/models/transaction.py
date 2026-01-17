@@ -1,15 +1,9 @@
-"""
-Transaction model with Pydantic validation.
-"""
-
 from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
 
-
 class Transaction(BaseModel):
-    """Transaction model with strict validation."""
-    
+
     transaction_id: str = Field(..., description="UUID of transaction", min_length=36, max_length=36)
     sender_id: Optional[str] = Field(default="", description="Sender ID")
     recipient_id: Optional[str] = Field(default="", description="Recipient ID")
@@ -26,11 +20,11 @@ class Transaction(BaseModel):
     description: Optional[str] = Field(default="", description="Transaction description")
     timestamp: Optional[str] = Field(default="", description="Transaction timestamp (ISO 8601)")
     is_fake_recipient: Optional[str] = Field(default="", description="Fraud indicator")
-    
+
     @field_validator('transaction_id')
     @classmethod
     def validate_uuid(cls, v: str) -> str:
-        """Validate UUID format."""
+
         if not v:
             return v
         import uuid
@@ -39,20 +33,20 @@ class Transaction(BaseModel):
         except ValueError:
             raise ValueError('transaction_id must be a valid UUID')
         return v
-    
+
     @field_validator('timestamp')
     @classmethod
     def validate_timestamp(cls, v: str) -> str:
-        """Validate ISO 8601 timestamp."""
+
         if not v:
             return v
         try:
             datetime.fromisoformat(v.replace('Z', '+00:00'))
         except ValueError:
-            # If timestamp is invalid, return empty string instead of raising error
+
             return ""
         return v
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -71,7 +65,3 @@ class Transaction(BaseModel):
                 "is_fake_recipient": ""
             }
         }
-
-
-
-

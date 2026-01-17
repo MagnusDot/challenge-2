@@ -12,7 +12,7 @@ SAVE_INTERVAL = 5
 DATASET_FOLDER = os.getenv('DATASET_FOLDER', 'public 2')
 DATASET_PATH = PROJECT_ROOT / "dataset" / DATASET_FOLDER / "transactions_dataset.json"
 
-SYSTEM_PROMPT_FILE = os.getenv('SYSTEM_PROMPT_FILE', 'system_prompt.md')
+SYSTEM_PROMPT_FILE = os.getenv('SYSTEM_PROMPT_FILE', 'system_prompt_compact.md')
 if Path(SYSTEM_PROMPT_FILE).is_absolute():
     SYSTEM_PROMPT_PATH = Path(SYSTEM_PROMPT_FILE)
 else:

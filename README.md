@@ -57,22 +57,79 @@ The script uses the following environment variables (defined in `.env`):
   - Expected file: `dataset/{DATASET_FOLDER}/transactions_dataset.json`
 
 ### System Prompt Configuration
-- `SYSTEM_PROMPT_FILE`: System prompt file (default: `system_prompt_v2.md`)
+- `SYSTEM_PROMPT_FILE`: System prompt file (default: `system_prompt_compact.md`)
   - Relative path to `Agent/` directory or absolute path
-  - Examples: `system_prompt_v2.md`, `system_prompt.md`, `transaction_analysis_prompt.md`
+  - **Default**: `system_prompt_compact.md` (optimized for token efficiency, ~70% fewer tokens)
+  - Alternatives: `system_prompt.md` (full version, 439 lines), `system_prompt_v2.md`
+  - Examples: `system_prompt_compact.md`, `system_prompt.md`, `system_prompt_v2.md`
 
 ### Parallelization Configuration
 - `MAX_CONCURRENT_REQUESTS`: Number of concurrent requests
   - Default: `50` for `just run`
   - Default: `5` for `just analyze-all-transactions`
 
+### Caching Configuration
+
+The project supports both **request caching** and **prompt caching** to reduce API costs and improve performance.
+
+#### Request Caching (LiteLLM)
+LiteLLM caching is configured via environment variables:
+- `LITELLM_CACHE`: Set to `"True"` to enable caching (default: disabled)
+  - Works with OpenAI/OpenRouter models
+  - Caches identical prompts to reduce API costs
+- `LITELLM_CACHE_TYPE`: Cache backend type (default: `local`)
+  - Options: `local` (in-memory), `redis` (requires Redis server)
+  
+**Example:**
+```bash
+export LITELLM_CACHE="True"
+export LITELLM_CACHE_TYPE="local"
+```
+
+#### Prompt Caching (Context Caching)
+For Gemini 2.0+ models, use `App` with `ContextCacheConfig` instead of `Runner`:
+- `CONTEXT_CACHE_MIN_TOKENS`: Minimum tokens to enable caching (default: `2048`)
+- `CONTEXT_CACHE_TTL_SECONDS`: Cache time-to-live in seconds (default: `600`)
+- `CONTEXT_CACHE_INTERVALS`: Max cache uses before refresh (default: `5`)
+
+**Note**: Context caching requires using `App` instead of `Runner`. See `core/app_setup.py` for an example.
+
+### Token Optimization
+
+The project is optimized to minimize token usage:
+
+1. **Compact System Prompt**: Default `system_prompt_compact.md` uses ~70% fewer tokens than full version
+   - Removed redundant explanations and examples
+   - Uses concise, structured format
+   - Maintains all critical detection logic
+
+2. **TOON Format**: API responses use TOON format (~40% fewer tokens than JSON)
+   - Automatically used in `get_transaction_aggregated` tool
+   - No wrapper text, direct TOON output
+
+3. **Optimized Tool Responses**: Minimal wrapper text in tool responses
+
+**To use full prompt** (if needed for debugging):
+```env
+SYSTEM_PROMPT_FILE=system_prompt.md
+```
+
 ### Example `.env` file
 ```env
 OPENROUTER_API_KEY=sk-or-v1-...
 MODEL=openrouter/openai/gpt-4.1
 DATASET_FOLDER=public 4
-SYSTEM_PROMPT_FILE=system_prompt_v2.md
+SYSTEM_PROMPT_FILE=system_prompt_compact.md
 MAX_CONCURRENT_REQUESTS=50
+
+# Caching configuration
+LITELLM_CACHE=true
+LITELLM_CACHE_TYPE=local
+
+# Context caching (for Gemini models)
+CONTEXT_CACHE_MIN_TOKENS=2048
+CONTEXT_CACHE_TTL_SECONDS=600
+CONTEXT_CACHE_INTERVALS=5
 ```
 
 ## Project Structure

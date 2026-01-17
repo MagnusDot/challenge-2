@@ -1,7 +1,3 @@
-"""
-Aggregated transaction model with all associated data.
-"""
-
 from typing import Optional, List
 from pydantic import BaseModel, Field
 
@@ -11,37 +7,20 @@ from api.models.email import Email
 from api.models.sms import SMS
 from api.models.location import Location
 
-
 class UserWithTransactions(User):
-    """
-    User model extended with other transactions.
-    
-    Includes all transactions where this user's IBAN appears
-    (as sender or recipient) within ±3 hours of the current transaction,
-    excluding the current transaction.
-    """
+
     other_transactions: List[Transaction] = Field(
         default_factory=list,
         description="Other transactions involving this user's IBAN within ±3 hours of current transaction (excluding current transaction)"
     )
 
-
 class AggregatedTransaction(BaseModel):
-    """
-    Transaction with all associated data aggregated.
-    
-    Includes the transaction itself, information about the sender,
-    recipient, as well as relevant emails, SMS, and locations.
-    """
-    
-    # Main transaction
+
     transaction: Transaction = Field(..., description="Transaction data")
-    
-    # User information
+
     sender: Optional[UserWithTransactions] = Field(None, description="Complete sender information with other transactions")
     recipient: Optional[UserWithTransactions] = Field(None, description="Complete recipient information with other transactions")
-    
-    # Associated communications
+
     sender_emails: List[Email] = Field(
         default_factory=list,
         description="Sender's emails"
@@ -58,8 +37,7 @@ class AggregatedTransaction(BaseModel):
         default_factory=list,
         description="Recipient's SMS messages"
     )
-    
-    # Location data
+
     sender_locations: List[Location] = Field(
         default_factory=list,
         description="Sender's locations near transaction date"
@@ -68,7 +46,7 @@ class AggregatedTransaction(BaseModel):
         default_factory=list,
         description="Recipient's locations near transaction date"
     )
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -110,4 +88,3 @@ class AggregatedTransaction(BaseModel):
                 "recipient_locations": []
             }
         }
-

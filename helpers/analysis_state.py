@@ -12,17 +12,17 @@ class AnalysisState:
         self.completed = 0
         self.results = []
         self.lock = threading.Lock()
-    
+
     def add_result(self, result: Dict[str, Any]) -> int:
         with self.lock:
             self.results.append(result)
             self.completed += 1
             return self.completed
-    
+
     def get_results(self) -> List[Dict[str, Any]]:
         with self.lock:
             return self.results.copy()
-    
+
     def save_results(self):
         with self.lock:
             with open(self.output_file, 'w', encoding='utf-8') as f:
