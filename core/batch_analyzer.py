@@ -7,7 +7,7 @@ from google.adk.runners import Runner
 from google.genai import types
 
 from helpers.analysis_state import AnalysisState
-from helpers.config import SAVE_INTERVAL
+from helpers.config import SAVE_INTERVAL, PROJECT_ROOT
 from helpers.token_estimator import estimate_tokens
 from helpers.event_processor import process_event
 from helpers.json_parser import parse_json_response
@@ -38,11 +38,13 @@ async def analyze_batch_with_agent(
         
         import json
         transaction_ids_json = json.dumps(transaction_ids)
-        prompt = f"""Analyze {len(transactions)} transactions. Return JSON object with "results" array.
+        
+        # Utiliser uniquement le prompt système, pas de prompt utilisateur personnalisé
+        prompt = f"""Analyze {len(transactions)} transactions.
 
 STEP 1: Call get_transaction_aggregated('{transaction_ids_json}') ONCE.
 STEP 2: Analyze all transactions from the returned data.
-STEP 3: Return JSON object: {{"results": [{{"transaction_id": "id", "risk_level": "low|medium|high|critical", "risk_score": 0-100, "reason": "...", "anomalies": []}}, ...]}}
+STEP 3: Follow the output format specified in your instructions.
 
 CRITICAL: Only ONE tool call to get_transaction_aggregated. Use the batch endpoint."""
         
@@ -168,7 +170,14 @@ CRITICAL: Only ONE tool call to get_transaction_aggregated. Use the batch endpoi
                 traceback.print_exc()
                 raise
             
-            response_text = parse_json_response(response_text)
+            # Nettoyer la réponse (enlever markdown si présent)
+            response_text = response_text.strip()
+            if response_text.startswith("```"):
+                # Enlever les blocs de code markdown
+                lines = response_text.split('\n')
+                response_text = '\n'.join([l for l in lines if not l.strip().startswith('```')])
+                response_text = response_text.strip()
+            
             batch_end_time = datetime.now()
             batch_duration = (batch_end_time - batch_start_time).total_seconds()
             
@@ -200,75 +209,139 @@ CRITICAL: Only ONE tool call to get_transaction_aggregated. Use the batch endpoi
             print(f"   📏 Réponse length: {len(response_text):,} caractères", flush=True)
             print(f"   📈 Tokens/transaction: {token_usage['total_tokens'] // len(transactions):,}", flush=True)
             
-            batch_results = json.loads(response_text)
+            # Parser le format texte : uuid | [reasons] | score/100
+            frauds_detected = []
+            if response_text:
+                for line in response_text.split('\n'):
+                    line = line.strip()
+                    if not line or '|' not in line:
+                        continue
+                    
+                    # Séparer par pipe, en gérant les espaces
+                    parts = [p.strip() for p in line.split('|')]
+                    if len(parts) >= 3:
+                        transaction_id = parts[0].strip()
+                        reasons_str = parts[1].strip()
+                        score_str = parts[2].strip()
+                        
+                        # Extraire le score (format: XX/100)
+                        score = 0
+                        if '/' in score_str:
+                            try:
+                                score = int(score_str.split('/')[0].strip())
+                            except (ValueError, AttributeError):
+                                pass
+                        
+                        # Extraire les raisons (format: [reason1, reason2, ...])
+                        reasons = []
+                        reasons_str = reasons_str.strip()
+                        if reasons_str.startswith('[') and reasons_str.endswith(']'):
+                            reasons_str = reasons_str[1:-1].strip()
+                            if reasons_str:
+                                reasons = [r.strip() for r in reasons_str.split(',') if r.strip()]
+                        
+                        # Ne garder que les fraudes high/critical (score >= 61)
+                        if score >= 61 and transaction_id:
+                            frauds_detected.append({
+                                "transaction_id": transaction_id,
+                                "risk_level": "critical" if score >= 86 else "high",
+                                "risk_score": score,
+                                "reason": "; ".join(reasons) if reasons else f"Fraud detected (score: {score})",
+                                "anomalies": reasons if reasons else [f"Risk score: {score}"]
+                            })
             
-            if isinstance(batch_results, dict) and "results" in batch_results:
-                batch_results = batch_results["results"]
+            print(f"   🔍 Fraudes détectées (high/critical): {len(frauds_detected)}/{len(transactions)}", flush=True)
             
-            if not isinstance(batch_results, list):
-                batch_results = [batch_results]
-            
+            # Créer les résultats pour toutes les transactions
             results = []
-            results_by_id = {r.get("transaction_id"): r for r in batch_results if isinstance(r, dict) and "transaction_id" in r}
+            frauds_by_id = {f["transaction_id"]: f for f in frauds_detected}
             
             for i, transaction in enumerate(transactions):
                 transaction_id = transaction.get("transaction_id", "unknown")
                 transaction_num = batch_start_idx + i + 1
                 
-                if transaction_id in results_by_id:
-                    risk_analysis = results_by_id[transaction_id]
-                elif i < len(batch_results) and isinstance(batch_results[i], dict):
-                    risk_analysis = batch_results[i]
-                else:
-                    risk_analysis = {"risk_level": "error", "risk_score": -1, "reason": "Transaction not found in response", "anomalies": []}
-                
-                if "transaction_id" not in risk_analysis:
-                    risk_analysis["transaction_id"] = transaction_id
-                
-                result = {
-                    "transaction_id": transaction_id,
-                    "risk_level": risk_analysis.get("risk_level", "unknown"),
-                    "risk_score": risk_analysis.get("risk_score", 0),
-                    "reason": risk_analysis.get("reason", ""),
-                    "anomalies": risk_analysis.get("anomalies", []),
-                    "token_usage": {
-                        "prompt_tokens": token_usage["prompt_tokens"] // len(transactions),
-                        "completion_tokens": token_usage["completion_tokens"] // len(transactions),
-                        "total_tokens": token_usage["total_tokens"] // len(transactions),
-                        "estimated": token_usage.get("estimated", False)
+                if transaction_id in frauds_by_id:
+                    # Transaction identifiée comme fraude
+                    fraud_data = frauds_by_id[transaction_id]
+                    result = {
+                        "transaction_id": transaction_id,
+                        "risk_level": fraud_data["risk_level"],
+                        "risk_score": fraud_data["risk_score"],
+                        "reason": fraud_data["reason"],
+                        "anomalies": fraud_data["anomalies"],
+                        "token_usage": {
+                            "prompt_tokens": token_usage["prompt_tokens"] // len(transactions),
+                            "completion_tokens": token_usage["completion_tokens"] // len(transactions),
+                            "total_tokens": token_usage["total_tokens"] // len(transactions),
+                            "estimated": token_usage.get("estimated", False)
+                        }
                     }
-                }
+                    print(format_progress_line(transaction_num, result, result["token_usage"], 
+                                             len([r for r in results if r.get("risk_level") in ["high", "critical"]]), 
+                                             state.total_transactions, state.start_time))
+                else:
+                    # Transaction non frauduleuse (low)
+                    result = {
+                        "transaction_id": transaction_id,
+                        "risk_level": "low",
+                        "risk_score": 0,
+                        "reason": "No anomalies detected - transaction appears normal",
+                        "anomalies": [],
+                        "token_usage": {
+                            "prompt_tokens": token_usage["prompt_tokens"] // len(transactions),
+                            "completion_tokens": token_usage["completion_tokens"] // len(transactions),
+                            "total_tokens": token_usage["total_tokens"] // len(transactions),
+                            "estimated": token_usage.get("estimated", False)
+                        }
+                    }
                 
                 completed = state.add_result(result)
-                print(format_progress_line(transaction_num, result, result["token_usage"], completed, 
-                                         state.total_transactions, state.start_time))
-                
                 results.append(result)
             
+            # Le fichier texte est mis à jour automatiquement par AnalysisState
             if completed % SAVE_INTERVAL == 0:
-                state.save_results()
-                print(f"💾 Sauvegarde intermédiaire: {completed} résultats")
+                frauds_count = len([r for r in state.get_results() if r.get("risk_level") in ["high", "critical"]])
+                print(f"💾 Progression: {completed} résultats ({frauds_count} fraudes détectées)")
             
             print(f"\n✅ [Batch {batch_num}] Analyse terminée: {len(results)} résultats en {batch_duration:.2f}s", flush=True)
             print(f"{'='*70}\n", flush=True)
             
             return results
             
-        except json.JSONDecodeError as e:
+        except (json.JSONDecodeError, ValueError, IndexError) as e:
             results = []
+            error_details = f"Parsing error: {str(e)}"
+            if hasattr(e, 'pos'):
+                error_details += f" at position {e.pos}"
+            if hasattr(e, 'lineno') and hasattr(e, 'colno'):
+                error_details += f" (line {e.lineno}, column {e.colno})"
+            
+            # Sauvegarder un aperçu de la réponse problématique pour debug
+            if os.getenv('DEBUG_ERRORS') == '1':
+                error_file = PROJECT_ROOT / "scripts" / "results" / f"json_error_batch_{batch_num}.txt"
+                error_file.parent.mkdir(parents=True, exist_ok=True)
+                with open(error_file, 'w', encoding='utf-8') as f:
+                    f.write(f"Batch {batch_num} - JSON Error\n")
+                    f.write(f"Error: {error_details}\n")
+                    f.write(f"\nResponse text ({len(response_text)} chars):\n")
+                    f.write("="*70 + "\n")
+                    f.write(response_text)
+                    f.write("\n" + "="*70 + "\n")
+                print(f"   💾 Réponse problématique sauvegardée dans: {error_file.name}", flush=True)
+            
             for transaction in transactions:
                 transaction_id = transaction.get("transaction_id", "unknown")
                 result = {
                     "transaction_id": transaction_id,
                     "risk_level": "error",
                     "risk_score": -1,
-                    "reason": f"JSON parsing error: {str(e)}",
+                    "reason": error_details,
                     "anomalies": [],
                     "token_usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0, "estimated": False}
                 }
                 completed = state.add_result(result)
                 results.append(result)
-            print(f"❌ [Batch {batch_num}] Erreur JSON: {str(e)[:100]}... | Progress: {completed}/{state.total_transactions}")
+            print(f"❌ [Batch {batch_num}] Erreur parsing: {error_details[:100]}... | Progress: {completed}/{state.total_transactions}", flush=True)
             return results
             
         except Exception as e:

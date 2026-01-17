@@ -5,7 +5,13 @@ from google.adk.sessions.in_memory_session_service import InMemorySessionService
 
 def setup_runner():
 
-    model = os.getenv('MODEL', 'openrouter/openai/gpt-5-mini')
+    # Modèle par défaut : Mistral Small (pas cher, bon pour JSON avec prompt amélioré)
+    # Alternatives pas chères avec support JSON:
+    # - openrouter/mistralai/mistral-small-3.2-24b-instruct (recommandé, très bon marché)
+    # - openrouter/deepseek/deepseek-chat (excellent pour JSON avec format strict)
+    # - openrouter/openai/gpt-3.5-turbo (classique, fiable)
+    # - openrouter/google/gemini-flash-1.5 (ultra pas cher)
+    model = os.getenv('MODEL', 'openrouter/mistralai/mistral-small-3.2-24b-instruct')
     print(f"\n🤖 Creating challenge agent with model: {model}")
 
     use_cache = os.getenv('LITELLM_CACHE', 'false').lower() == 'true'

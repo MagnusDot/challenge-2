@@ -29,6 +29,21 @@ run CONCURRENT="50":
     PYTHONPATH=. MAX_CONCURRENT_REQUESTS={{CONCURRENT}} .venv/bin/python app.py
     @echo "✅ Analysis complete! Check scripts/results/transaction_risk_analysis_*.json"
 
+# Retry failed transactions (batch bonus)
+# Automatically finds the latest results file and retries all transactions with risk_level="error"
+retry CONCURRENT="50":
+    @echo "🔄 Starting batch bonus to retry failed transactions..."
+    PYTHONPATH=. MAX_CONCURRENT_REQUESTS={{CONCURRENT}} .venv/bin/python app.py retry
+    @echo "✅ Batch bonus complete! Check scripts/results/transaction_risk_analysis_bonus_*.json"
+    @echo "💡 Merged results saved in scripts/results/transaction_risk_analysis_merged_*.json"
+
+# Retry failed transactions from a specific results file
+retry-file RESULTS_FILE CONCURRENT="50":
+    @echo "🔄 Starting batch bonus to retry failed transactions from {{RESULTS_FILE}}..."
+    PYTHONPATH=. MAX_CONCURRENT_REQUESTS={{CONCURRENT}} .venv/bin/python app.py retry {{RESULTS_FILE}}
+    @echo "✅ Batch bonus complete! Check scripts/results/transaction_risk_analysis_bonus_*.json"
+    @echo "💡 Merged results saved in scripts/results/transaction_risk_analysis_merged_*.json"
+
 # Initialize agent only (original app.py behavior)
 init-agent:
     .venv/bin/python app.py
