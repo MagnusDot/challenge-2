@@ -28,7 +28,7 @@ class User(BaseModel):
     
     first_name: str = Field(..., description="First name", min_length=1, max_length=100)
     last_name: str = Field(..., description="Last name", min_length=1, max_length=100)
-    birth_year: int = Field(..., description="Birth year", ge=1900, le=2024)
+    birth_year: int = Field(..., description="Birth year", ge=1900, le=2100)
     salary: int = Field(..., description="Annual salary in euros", ge=0)
     job: str = Field(..., description="Job title", min_length=1, max_length=200)
     iban: str = Field(..., description="IBAN code", min_length=15, max_length=34)

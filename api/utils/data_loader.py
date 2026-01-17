@@ -70,12 +70,50 @@ def set_dataset_folder(folder_name: str) -> None:
     clear_cache()
 
 
+def _build_iban_to_biotag_mapping() -> dict:
+    """Construit un mapping IBAN -> biotag depuis les transactions.
+    
+    Returns:
+        Dictionnaire {iban: biotag} pour enrichir les utilisateurs
+    """
+    try:
+        # Charger directement depuis le fichier JSON pour éviter les dépendances circulaires
+        transactions_path = get_dataset_dir() / "transactions_dataset.json"
+        if not transactions_path.exists():
+            return {}
+        
+        with open(transactions_path, 'r', encoding='utf-8') as f:
+            transactions_data = json.load(f)
+        
+        iban_to_biotag = {}
+        
+        # Parcourir les transactions pour extraire les correspondances IBAN -> biotag
+        for tx in transactions_data:
+            # Utiliser sender_id comme biotag si disponible
+            sender_id = tx.get('sender_id', '').strip() if tx.get('sender_id') else ''
+            sender_iban = tx.get('sender_iban', '').strip() if tx.get('sender_iban') else ''
+            if sender_id and sender_iban:
+                iban_to_biotag[sender_iban] = sender_id
+            
+            # Utiliser recipient_id comme biotag si disponible
+            recipient_id = tx.get('recipient_id', '').strip() if tx.get('recipient_id') else ''
+            recipient_iban = tx.get('recipient_iban', '').strip() if tx.get('recipient_iban') else ''
+            if recipient_id and recipient_iban:
+                iban_to_biotag[recipient_iban] = recipient_id
+        
+        return iban_to_biotag
+    except Exception:
+        # Si les transactions ne sont pas encore chargées, retourner un dict vide
+        return {}
+
+
 @lru_cache(maxsize=1)
 def load_users() -> List[User]:
     """Load users from JSON file with caching.
     
     Tries to load from users_descriptions.json first (which contains biotags),
-    falls back to users.json if not available.
+    falls back to users.json if not available. Enrichit automatiquement les
+    utilisateurs avec leurs biotags depuis les transactions si manquants.
     """
     dataset_dir = get_dataset_dir()
     
@@ -112,7 +150,21 @@ def load_users() -> List[User]:
     file_path = dataset_dir / "users.json"
     with open(file_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
-    return [User(**item) for item in data]
+    
+    # Enrichir les utilisateurs avec leurs biotags depuis les transactions
+    iban_to_biotag = _build_iban_to_biotag_mapping()
+    
+    enriched_users = []
+    for item in data:
+        # Si l'utilisateur n'a pas de biotag, essayer de le trouver via l'IBAN
+        if 'biotag' not in item or not item.get('biotag'):
+            iban = item.get('iban', '')
+            if iban in iban_to_biotag:
+                item['biotag'] = iban_to_biotag[iban]
+        
+        enriched_users.append(User(**item))
+    
+    return enriched_users
 
 
 @lru_cache(maxsize=1)
