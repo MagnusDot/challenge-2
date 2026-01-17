@@ -1,6 +1,7 @@
 import os
 import json
 import asyncio
+import re
 from datetime import datetime
 from typing import Dict, Any, List
 from google.adk.runners import Runner
@@ -12,6 +13,10 @@ from helpers.token_estimator import estimate_tokens
 from helpers.event_processor import process_event
 from helpers.json_parser import parse_json_response
 from helpers.display import format_progress_line
+
+# Configuration des retries
+MAX_RETRIES = int(os.getenv('MAX_RETRIES', '3'))
+RETRY_DELAY_BASE = float(os.getenv('RETRY_DELAY_BASE', '2.0'))  # Délai de base en secondes
 
 async def analyze_batch_with_agent(
     runner: Runner,
@@ -146,29 +151,115 @@ CRITICAL: Only ONE tool call to get_transaction_aggregated. Use the batch endpoi
                 
                 print(f"   ✅ Tous les événements reçus (total: {event_count})", flush=True)
             
-            try:
-                heartbeat_task = asyncio.create_task(heartbeat())
-                await asyncio.wait_for(process_events(), timeout=700.0)
-                heartbeat_task.cancel()
+            def is_retryable_error(error: Exception) -> bool:
+                """Détermine si une erreur est retryable (503, rate limit, timeout temporaire)."""
+                error_msg = str(error).lower()
+                error_type = type(error).__name__
+                
+                # Service Unavailable (503)
+                if "service unavailable" in error_msg or "503" in error_msg:
+                    return True
+                
+                # Rate limit (429)
+                if "rate limit" in error_msg or "429" in error_msg:
+                    return True
+                
+                # Timeout (peut être temporaire)
+                if "timeout" in error_msg and "ServiceUnavailableError" in error_type:
+                    return True
+                
+                # Erreurs réseau temporaires
+                if "connection" in error_msg or "network" in error_msg:
+                    return True
+                
+                return False
+            
+            def extract_retry_delay(error: Exception) -> float:
+                """Extrait le délai de retry suggéré depuis l'erreur."""
+                error_msg = str(error)
+                
+                # Chercher "retry_after_seconds" dans le message d'erreur
+                if "retry_after_seconds" in error_msg:
+                    try:
+                        match = re.search(r'"retry_after_seconds":\s*(\d+)', error_msg)
+                        if match:
+                            return float(match.group(1))
+                    except:
+                        pass
+                
+                return RETRY_DELAY_BASE
+            
+            # Logique de retry avec backoff exponentiel
+            last_error = None
+            for attempt in range(MAX_RETRIES + 1):
                 try:
-                    await heartbeat_task
-                except asyncio.CancelledError:
-                    pass
-            except asyncio.TimeoutError:
-                if heartbeat_task:
+                    heartbeat_task = asyncio.create_task(heartbeat())
+                    await asyncio.wait_for(process_events(), timeout=700.0)
                     heartbeat_task.cancel()
-                elapsed = (datetime.now() - start_wait_time).total_seconds()
-                print(f"   ⏱️  Timeout après {elapsed:.1f}s: {event_count} événements reçus", flush=True)
-                raise
-            except Exception as e:
-                if heartbeat_task:
-                    heartbeat_task.cancel()
-                elapsed = (datetime.now() - start_wait_time).total_seconds()
-                print(f"   ❌ Erreur après {elapsed:.1f}s ({event_count} événements): {type(e).__name__}: {str(e)[:200]}", flush=True)
-                import traceback
-                print(f"   📋 Traceback:", flush=True)
-                traceback.print_exc()
-                raise
+                    try:
+                        await heartbeat_task
+                    except asyncio.CancelledError:
+                        pass
+                    # Succès - sortir de la boucle de retry
+                    break
+                    
+                except asyncio.TimeoutError:
+                    if heartbeat_task:
+                        heartbeat_task.cancel()
+                    elapsed = (datetime.now() - start_wait_time).total_seconds()
+                    print(f"   ⏱️  Timeout après {elapsed:.1f}s: {event_count} événements reçus", flush=True)
+                    if attempt < MAX_RETRIES:
+                        retry_delay = RETRY_DELAY_BASE * (2 ** attempt)
+                        print(f"   🔄 Retry {attempt + 1}/{MAX_RETRIES} dans {retry_delay:.1f}s...", flush=True)
+                        await asyncio.sleep(retry_delay)
+                        # Réinitialiser pour le retry
+                        event_count = 0
+                        response_text = ""
+                        start_wait_time = datetime.now()
+                        continue
+                    raise
+                    
+                except ValueError as e:
+                    # Erreur de fonction non trouvée - Mistral peut générer des noms de fonction invalides
+                    if "is not found in the tools_dict" in str(e):
+                        if heartbeat_task:
+                            heartbeat_task.cancel()
+                        elapsed = (datetime.now() - start_wait_time).total_seconds()
+                        print(f"   ⚠️  Erreur de fonction invalide après {elapsed:.1f}s: {str(e)[:100]}", flush=True)
+                        print(f"   💡 Mistral a tenté d'appeler une fonction invalide. Continuons avec la réponse actuelle...", flush=True)
+                        # Ne pas lever l'exception, continuer avec la réponse actuelle
+                        break
+                    else:
+                        raise
+                        
+                except Exception as e:
+                    last_error = e
+                    if heartbeat_task:
+                        heartbeat_task.cancel()
+                    elapsed = (datetime.now() - start_wait_time).total_seconds()
+                    
+                    # Vérifier si l'erreur est retryable
+                    if is_retryable_error(e) and attempt < MAX_RETRIES:
+                        retry_delay = extract_retry_delay(e)
+                        # Backoff exponentiel avec jitter
+                        actual_delay = retry_delay * (2 ** attempt) + (asyncio.get_event_loop().time() % 1)
+                        print(f"   ⚠️  Erreur retryable après {elapsed:.1f}s ({event_count} événements): {type(e).__name__}", flush=True)
+                        print(f"   🔄 Retry {attempt + 1}/{MAX_RETRIES} dans {actual_delay:.1f}s...", flush=True)
+                        await asyncio.sleep(actual_delay)
+                        # Réinitialiser pour le retry
+                        event_count = 0
+                        response_text = ""
+                        start_wait_time = datetime.now()
+                        continue
+                    else:
+                        # Erreur non retryable ou nombre max de retries atteint
+                        print(f"   ❌ Erreur après {elapsed:.1f}s ({event_count} événements): {type(e).__name__}: {str(e)[:200]}", flush=True)
+                        if attempt >= MAX_RETRIES:
+                            print(f"   ⛔ Nombre maximum de retries ({MAX_RETRIES}) atteint", flush=True)
+                        import traceback
+                        print(f"   📋 Traceback:", flush=True)
+                        traceback.print_exc()
+                        raise
             
             # Nettoyer la réponse (enlever markdown si présent)
             response_text = response_text.strip()

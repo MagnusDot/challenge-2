@@ -9,6 +9,7 @@ from api.utils.toon_formatter import format_response_as_toon
 logger = logging.getLogger(__name__)
 
 from api.models.aggregated import AggregatedTransaction, UserWithTransactions
+from api.models.email import Email
 from api.utils.data_loader import (
     load_transactions,
     load_users,
@@ -106,6 +107,201 @@ def find_locations_near_timestamp(
     except (ValueError, AttributeError) as e:
         logger.error(f"Error parsing reference timestamp {timestamp}: {e}")
         return []
+
+def extract_text_from_html(html_content: str) -> str:
+    """Extrait le texte brut depuis du contenu HTML."""
+    import re
+    
+    # Supprimer les balises <script> et <style> avec leur contenu
+    html_content = re.sub(r'<script[^>]*>.*?</script>', '', html_content, flags=re.DOTALL | re.IGNORECASE)
+    html_content = re.sub(r'<style[^>]*>.*?</style>', '', html_content, flags=re.DOTALL | re.IGNORECASE)
+    
+    # Remplacer les balises de saut de ligne par des sauts de ligne réels
+    html_content = re.sub(r'<br\s*/?>', '\n', html_content, flags=re.IGNORECASE)
+    html_content = re.sub(r'</p>', '\n\n', html_content, flags=re.IGNORECASE)
+    html_content = re.sub(r'</div>', '\n', html_content, flags=re.IGNORECASE)
+    html_content = re.sub(r'</li>', '\n', html_content, flags=re.IGNORECASE)
+    html_content = re.sub(r'</h[1-6]>', '\n\n', html_content, flags=re.IGNORECASE)
+    
+    # Supprimer toutes les autres balises HTML
+    html_content = re.sub(r'<[^>]+>', '', html_content)
+    
+    # Décoder les entités HTML courantes
+    html_content = html_content.replace('&nbsp;', ' ')
+    html_content = html_content.replace('&amp;', '&')
+    html_content = html_content.replace('&lt;', '<')
+    html_content = html_content.replace('&gt;', '>')
+    html_content = html_content.replace('&quot;', '"')
+    html_content = html_content.replace('&#39;', "'")
+    html_content = html_content.replace('&apos;', "'")
+    
+    # Nettoyer les espaces multiples et les sauts de ligne
+    html_content = re.sub(r'[ \t]+', ' ', html_content)
+    html_content = re.sub(r'\n\s*\n\s*\n+', '\n\n', html_content)
+    html_content = html_content.strip()
+    
+    return html_content
+
+def extract_text_from_email(email_content: str) -> str:
+    """Extrait le texte brut depuis le contenu d'un email, en supprimant le HTML."""
+    # Séparer les headers du body
+    parts = email_content.split('\n\n', 1)
+    if len(parts) < 2:
+        return email_content  # Pas de body séparé, retourner tel quel
+    
+    headers = parts[0]
+    body = parts[1]
+    
+    # Vérifier si le body contient du HTML
+    if '<html' in body.lower() or '<body' in body.lower():
+        # Extraire le texte depuis le HTML
+        text_body = extract_text_from_html(body)
+        # Reconstruire l'email avec le texte brut
+        return f"{headers}\n\n{text_body}"
+    
+    return email_content  # Pas de HTML, retourner tel quel
+
+def extract_timestamp_from_email(email_content: str) -> Optional[datetime]:
+    """Extrait le timestamp depuis le contenu d'un email (RFC 822 format)."""
+    import re
+    from email.utils import parsedate_to_datetime
+    
+    # Chercher le header Date: dans l'email
+    date_patterns = [
+        r'Date:\s*(.+?)(?:\n|$)',
+        r'date:\s*(.+?)(?:\n|$)',
+    ]
+    
+    for pattern in date_patterns:
+        match = re.search(pattern, email_content, re.IGNORECASE | re.MULTILINE)
+        if match:
+            date_str = match.group(1).strip()
+            try:
+                # Parser le format RFC 822
+                parsed_date = parsedate_to_datetime(date_str)
+                return parsed_date
+            except (ValueError, TypeError):
+                # Essayer avec fromisoformat si c'est un format ISO
+                try:
+                    return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+                except:
+                    continue
+    return None
+
+def extract_timestamp_from_sms(sms_content: str) -> Optional[datetime]:
+    """Extrait le timestamp depuis le contenu d'un SMS."""
+    import re
+    from datetime import timezone
+    
+    # Chercher le pattern "Date: YYYY-MM-DD HH:MM:SS"
+    date_pattern = r'Date:\s*(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})'
+    match = re.search(date_pattern, sms_content, re.IGNORECASE | re.MULTILINE)
+    
+    if match:
+        date_str = match.group(1).strip()
+        try:
+            # Parser le format "YYYY-MM-DD HH:MM:SS" et ajouter UTC timezone
+            naive_dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+            # Convertir en datetime aware avec UTC timezone
+            return naive_dt.replace(tzinfo=timezone.utc)
+        except ValueError:
+            pass
+    
+    return None
+
+def filter_emails_by_timestamp(
+    emails: list,
+    transaction_timestamp: str,
+    time_window_hours: int = 3
+) -> list:
+    """Filtre les emails pour ne garder que ceux dans les N heures avant la transaction."""
+    if not transaction_timestamp or not transaction_timestamp.strip():
+        return emails
+    
+    try:
+        from datetime import timezone
+        
+        # Normaliser le timestamp de la transaction
+        tx_timestamp = transaction_timestamp.replace('Z', '+00:00')
+        if '+' not in tx_timestamp and '-' not in tx_timestamp[-6:]:
+            if 'T' in tx_timestamp:
+                tx_timestamp = tx_timestamp + '+00:00'
+        
+        ref_time = datetime.fromisoformat(tx_timestamp)
+        # S'assurer que ref_time est aware (avec timezone)
+        if ref_time.tzinfo is None:
+            ref_time = ref_time.replace(tzinfo=timezone.utc)
+        
+        time_window = timedelta(hours=time_window_hours)
+        
+        filtered_emails = []
+        for email in emails:
+            email_timestamp = extract_timestamp_from_email(email.mail)
+            if email_timestamp:
+                # S'assurer que email_timestamp est aware (avec timezone)
+                if email_timestamp.tzinfo is None:
+                    email_timestamp = email_timestamp.replace(tzinfo=timezone.utc)
+                
+                # Ne garder que les emails dans les N heures AVANT la transaction
+                time_diff = ref_time - email_timestamp
+                if timedelta(0) <= time_diff <= time_window:
+                    filtered_emails.append(email)
+            else:
+                # Si on ne peut pas extraire le timestamp, ne pas inclure l'email
+                logger.debug(f"Could not extract timestamp from email, skipping")
+        
+        logger.debug(f"Filtered {len(filtered_emails)}/{len(emails)} emails within {time_window_hours}h before transaction")
+        return filtered_emails
+    except (ValueError, AttributeError) as e:
+        logger.error(f"Error filtering emails by timestamp: {e}")
+        return emails  # Retourner tous les emails en cas d'erreur
+
+def filter_sms_by_timestamp(
+    sms_list: list,
+    transaction_timestamp: str,
+    time_window_hours: int = 3
+) -> list:
+    """Filtre les SMS pour ne garder que ceux dans les N heures avant la transaction."""
+    if not transaction_timestamp or not transaction_timestamp.strip():
+        return sms_list
+    
+    try:
+        from datetime import timezone
+        
+        # Normaliser le timestamp de la transaction
+        tx_timestamp = transaction_timestamp.replace('Z', '+00:00')
+        if '+' not in tx_timestamp and '-' not in tx_timestamp[-6:]:
+            if 'T' in tx_timestamp:
+                tx_timestamp = tx_timestamp + '+00:00'
+        
+        ref_time = datetime.fromisoformat(tx_timestamp)
+        # S'assurer que ref_time est aware (avec timezone)
+        if ref_time.tzinfo is None:
+            ref_time = ref_time.replace(tzinfo=timezone.utc)
+        
+        time_window = timedelta(hours=time_window_hours)
+        
+        filtered_sms = []
+        for sms in sms_list:
+            sms_timestamp = extract_timestamp_from_sms(sms.sms)
+            if sms_timestamp:
+                # S'assurer que sms_timestamp est aware (avec timezone)
+                if sms_timestamp.tzinfo is None:
+                    sms_timestamp = sms_timestamp.replace(tzinfo=timezone.utc)
+                
+                # Ne garder que les SMS dans les N heures AVANT la transaction
+                time_diff = ref_time - sms_timestamp
+                if timedelta(0) <= time_diff <= time_window:
+                    filtered_sms.append(sms)
+            else:
+                # Si on ne peut pas extraire le timestamp, ne pas inclure le SMS
+                logger.debug(f"Could not extract timestamp from SMS, skipping")
+        
+        logger.debug(f"Filtered {len(filtered_sms)}/{len(sms_list)} SMS within {time_window_hours}h before transaction")
+        return filtered_sms
+    except (ValueError, AttributeError) as e:
+        logger.error(f"Error filtering SMS by timestamp: {e}")
+        return sms_list  # Retourner tous les SMS en cas d'erreur
 
 @router.get("/{transaction_id}")
 async def get_aggregated_transaction(
@@ -218,7 +414,18 @@ async def get_aggregated_transaction(
             if sender_user_id.lower() in sms.id_user.lower():
                 sender_sms.append(sms)
 
-        logger.debug(f"Found {len(sender_emails)} emails and {len(sender_sms)} SMS for sender")
+        # Filtrer par timestamp (3 heures avant la transaction)
+        if transaction.timestamp:
+            sender_emails = filter_emails_by_timestamp(sender_emails, transaction.timestamp, time_window_hours=3)
+            sender_sms = filter_sms_by_timestamp(sender_sms, transaction.timestamp, time_window_hours=3)
+        
+        # Extraire le texte depuis le HTML pour les emails
+        sender_emails = [
+            Email(mail=extract_text_from_email(email.mail))
+            for email in sender_emails
+        ]
+
+        logger.debug(f"Found {len(sender_emails)} emails and {len(sender_sms)} SMS for sender (within 3h before transaction)")
     else:
         logger.warning(f"No sender_user_id found, cannot filter SMS/emails. sender_id: {transaction.sender_id}")
 
@@ -247,7 +454,18 @@ async def get_aggregated_transaction(
             if recipient_user_id.lower() in sms.id_user.lower():
                 recipient_sms.append(sms)
 
-        logger.debug(f"Found {len(recipient_emails)} emails and {len(recipient_sms)} SMS for recipient")
+        # Filtrer par timestamp (3 heures avant la transaction)
+        if transaction.timestamp:
+            recipient_emails = filter_emails_by_timestamp(recipient_emails, transaction.timestamp, time_window_hours=3)
+            recipient_sms = filter_sms_by_timestamp(recipient_sms, transaction.timestamp, time_window_hours=3)
+        
+        # Extraire le texte depuis le HTML pour les emails
+        recipient_emails = [
+            type(email)(mail=extract_text_from_email(email.mail))
+            for email in recipient_emails
+        ]
+
+        logger.debug(f"Found {len(recipient_emails)} emails and {len(recipient_sms)} SMS for recipient (within 3h before transaction)")
 
     sender_locations = []
     recipient_locations = []
@@ -474,6 +692,23 @@ async def get_batch_aggregated_transactions(
         recipient_sms = []
         if recipient and recipient.biotag:
             recipient_sms = [s for s in sms_list if recipient.biotag.lower() in s.id_user.lower()]
+        
+        # Filtrer par timestamp (3 heures avant la transaction)
+        if transaction.timestamp:
+            sender_emails = filter_emails_by_timestamp(sender_emails, transaction.timestamp, time_window_hours=3)
+            sender_sms = filter_sms_by_timestamp(sender_sms, transaction.timestamp, time_window_hours=3)
+            recipient_emails = filter_emails_by_timestamp(recipient_emails, transaction.timestamp, time_window_hours=3)
+            recipient_sms = filter_sms_by_timestamp(recipient_sms, transaction.timestamp, time_window_hours=3)
+        
+        # Extraire le texte depuis le HTML pour les emails
+        sender_emails = [
+            Email(mail=extract_text_from_email(email.mail))
+            for email in sender_emails
+        ]
+        recipient_emails = [
+            type(email)(mail=extract_text_from_email(email.mail))
+            for email in recipient_emails
+        ]
         
         sender_locations = []
         if sender and sender.biotag and transaction.timestamp:
