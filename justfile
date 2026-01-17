@@ -87,44 +87,6 @@ freeze:
     .venv/bin/pip freeze > requirements.txt
     @echo "✅ Dependencies frozen to requirements.txt"
 
-# Convert CSV dataset to JSON
-csv-to-json:
-    PYTHONPATH=. .venv/bin/python scripts/convert_csv_to_json.py --pretty
-    @echo "💡 JSON file created: dataset/transactions_dataset.json"
-
-# Extract high-risk transaction IDs
-extract-high-risk:
-    PYTHONPATH=. .venv/bin/python scripts/extract_high_risk_ids.py
-    @echo "✅ High-risk IDs extracted!"
-
-# Filter high-risk transactions
-filter-high-risk:
-    PYTHONPATH=. .venv/bin/python scripts/filter_high_risk.py
-    @echo "✅ High-risk transactions filtered!"
-
-# Analyze all transactions with AI agent (generates risk assessment)
-# Uses parallel script by default (main script)
-analyze-all-transactions CONCURRENT="5":
-    @echo "🚀 Starting analysis with {{CONCURRENT}} concurrent requests..."
-    PYTHONPATH=. MAX_CONCURRENT_REQUESTS={{CONCURRENT}} .venv/bin/python app.py
-    @echo "✅ Analysis complete! Check scripts/results/transaction_risk_analysis_*.json"
-
-# Analyze all transactions in parallel with AI agent (alias for analyze-all-transactions)
-analyze-all-parallel CONCURRENT="5":
-    @just analyze-all-transactions CONCURRENT={{CONCURRENT}}
-
-# Analyze all transactions sequentially (legacy script, slower)
-analyze-all-sequential:
-    @echo "⚠️  Using legacy sequential script (slower)"
-    PYTHONPATH=. .venv/bin/python scripts/analyze_all_transactions.py
-    @echo "✅ Sequential analysis complete! Check scripts/results/transaction_risk_analysis_*.json"
-
-# Analyze with debug mode to see token usage events
-analyze-parallel-debug CONCURRENT="5":
-    @echo "🐛 Starting parallel analysis with DEBUG mode..."
-    PYTHONPATH=. DEBUG_TOKENS=1 MAX_CONCURRENT_REQUESTS={{CONCURRENT}} .venv/bin/python app.py
-    @echo "✅ Debug analysis complete! Check scripts/results/"
-
 # ==== API Commands ====
 
 # Run API locally (development)
