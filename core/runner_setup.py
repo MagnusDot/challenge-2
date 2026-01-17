@@ -1,7 +1,11 @@
 import os
-from Agent.challenge import create_challenge_agent
+import sys
+from pathlib import Path
 from google.adk.runners import Runner
 from google.adk.sessions.in_memory_session_service import InMemorySessionService
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from fraud_graph.Agent.agent import create_fraud_agent
 
 def setup_runner():
 
@@ -12,14 +16,14 @@ def setup_runner():
     # - openrouter/openai/gpt-3.5-turbo (classique, fiable)
     # - openrouter/google/gemini-flash-1.5 (ultra pas cher)
     model = os.getenv('MODEL', 'openrouter/mistralai/ministral-14b-2512')
-    print(f"\n🤖 Creating challenge agent with model: {model}")
+    print(f"\n🤖 Creating fraud agent with model: {model}")
 
     use_cache = os.getenv('LITELLM_CACHE', 'false').lower() == 'true'
     if use_cache:
         print("   📦 LiteLLM caching enabled (set LITELLM_CACHE=true)")
 
-    agent = create_challenge_agent(model=model)
-    print(f"✅ Agent '{agent.name}' initialized!")
+    agent = create_fraud_agent()
+    print(f"✅ Agent '{agent.name}' initialized with batch tool!")
 
     print(f"🔧 Creating Runner with session management...")
     session_service = InMemorySessionService()

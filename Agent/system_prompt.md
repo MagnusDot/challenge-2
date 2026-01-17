@@ -25,7 +25,7 @@ Analyze transactions by ID(s) and determine if they are FRAUDULENT or LEGITIMATE
 
 ## Critical Constraints
 
-- MUST call `get_transaction_aggregated(transaction_ids)` first - this tool provides ALL available data
+- MUST call `get_transaction_aggregated_batch(transaction_ids)` first - this tool provides ALL available data
   - For single transaction: pass the UUID as a JSON string: `"uuid-here"`
   - For batch: pass a JSON array of UUIDs: `["uuid1", "uuid2", ...]`
 - MUST analyze ALL data comprehensively - every piece of data matters
@@ -37,7 +37,7 @@ Analyze transactions by ID(s) and determine if they are FRAUDULENT or LEGITIMATE
 
 ## Available Data
 
-When you call `get_transaction_aggregated(transaction_ids)`, you receive a comprehensive dataset with ALL available information for each transaction in the following structure:
+When you call `get_transaction_aggregated_batch(transaction_ids)`, you receive a comprehensive dataset with ALL available information for each transaction in the following structure:
 
 ```json
 {
@@ -154,12 +154,35 @@ Before marking a transaction as fraudulent, evaluate if it makes sense in the us
 - Multiple transactions of €50-€150 in one day - **NORMAL** (shopping, paying bills)
 - Balance dropping from €2000 to €500 - **NORMAL** (person spent money, that's normal)
 
-**ONLY mark as CRITICAL FRAUD (score >= 86) when you have STRONG evidence of actual fraud**:
-- 🔴 **Account drained to €0.00** - This is the strongest indicator
-- 🔴 **Account drained to near-zero** combined with phishing emails/SMS indicating account takeover
-- 🔴 **Unusual recipient patterns** combined with account draining (e.g., large transfers to unknown recipients while account is drained)
-- 🔴 **GPS contradiction** combined with account draining and phishing indicators
-- 🔴 **Multiple large transactions** that drain the account when combined with phishing/account takeover indicators
+**ONLY mark as CRITICAL FRAUD when you have STRONG evidence of actual fraud. Focus on these specific fraud patterns**:
+
+**1. Account Draining (BEC Urgent Invoice, Identity Verification)**:
+- 🔴 **Balance dropped to €0.00** - This is the strongest indicator of account draining fraud
+- 🔴 **Balance dropped to €0.00** combined with:
+  - Large transfer amount inconsistent with user's salary/job
+  - New recipient (new_dest) that user has never transacted with before
+  - Time correlation: transaction occurs shortly after suspicious email/SMS (within 3 hours)
+  - Amount anomaly: transaction amount is unusually high relative to user's income
+
+**2. Phishing Scams (Parcel Customs Fee)**:
+- 🔴 **New merchant** (user has never transacted with this merchant before) combined with:
+  - **Time correlation**: Transaction occurs within 3 hours after receiving suspicious email/SMS
+  - Email/SMS content indicates urgency, customs fees, parcel delivery issues
+  - Transaction amount matches the "fee" mentioned in phishing communication
+
+**3. Card Cloning (ATM Card Cloned)**:
+- 🔴 **Post-withdrawal pattern**: Transaction occurs shortly after a cash withdrawal
+- 🔴 **New venue**: Transaction at a location/merchant where user has never been before
+- 🔴 **Location anomaly**: GPS shows user is far from transaction location
+- 🔴 **Impossible travel**: User cannot physically be at transaction location given previous GPS locations
+- 🔴 **Amount anomaly**: Unusually high transaction amount for the location/merchant type
+- **CRITICAL**: These indicators together indicate card cloning, even if balance is not €0.00
+
+**4. Identity Verification Scams**:
+- 🔴 **Multiple withdrawals in rapid sequence** (pattern_multiple_withdrawals)
+- 🔴 **Location anomaly** combined with **impossible travel**
+- 🔴 **Time correlation**: Withdrawals occur after suspicious identity verification emails/SMS
+- 🔴 **Account draining**: Balance drops to €0.00 or very low (< €10) after withdrawals
 
 **Evaluation Checklist**:
 1. **Job context**: Does the transaction align with the user's profession? If YES → likely NORMAL
@@ -181,9 +204,16 @@ Before marking a transaction as fraudulent, evaluate if it makes sense in the us
 - Balance drops from high amount to €0.00 in suspicious pattern (multiple rapid transactions draining account)
 
 **DO NOT mark as fraud just because**:
-- Balance is "low" (€500, €300, €200 are NOT low - they're normal)
-- Balance dropped after a transaction (people spend money - that's normal)
-- Withdrawal of €200-€500 (these are normal withdrawal amounts)
+- ❌ Balance is "low" (€500, €300, €200, €100 are NOT low - they're normal spending levels)
+- ❌ Balance dropped after a transaction (people spend money - that's completely normal)
+- ❌ Withdrawal of €200-€500 (these are normal withdrawal amounts for daily expenses)
+- ❌ No recipient profile (most transactions are to businesses - this is NORMAL)
+- ❌ No communication data (most legitimate transactions don't have emails/SMS - this is NORMAL)
+- ❌ Multiple transactions in short time (normal shopping behavior)
+- ❌ E-commerce transaction with no prior history (first-time online shopping is NORMAL)
+- ❌ Transaction amount seems "high" but balance after is still reasonable (€500+ remaining)
+
+**CRITICAL RULE**: **ONLY mark as fraudulent if balance is €0.00 OR if you detect specific fraud patterns (card cloning, phishing with time correlation, identity verification scams) even without account draining.**
 
 **Transaction Type Matters**:
 - E-commerce (`pagamento e-comm`, `e-commerce`) can be done from anywhere - GPS contradiction is normal
@@ -198,7 +228,19 @@ Before marking a transaction as fraudulent, evaluate if it makes sense in the us
 
 **Missing Metadata**: Empty location, payment_method, and description fields are COMMON in legitimate transactions. Many transactions don't have complete metadata. This alone is NOT a fraud indicator. Only consider it suspicious when combined with STRONG fraud indicators like account draining.
 
-**Transaction Patterns**: Use `other_transactions` to analyze behavioral patterns, detect rapid sequences, and identify anomalies. **But remember: normal people make multiple transactions in short periods (shopping, paying bills, etc.) - this is NORMAL behavior**. Only suspicious if combined with account draining and other fraud indicators.
+**Transaction Patterns**: Use `other_transactions` to analyze behavioral patterns, detect rapid sequences, and identify anomalies. **But remember: normal people make multiple transactions in short periods (shopping, paying bills, etc.) - this is NORMAL behavior**. 
+
+**Key Fraud Patterns to Detect**:
+- **Time Correlation**: Transaction occurs within 3 hours after suspicious email/SMS. Check email/SMS timestamps and transaction timestamp. This is a STRONG fraud indicator when combined with new merchant/new destination.
+- **New Merchant**: User has never transacted with this merchant before. Check `other_transactions` to see if this merchant/recipient appears in user's history. Combined with time correlation, this indicates phishing.
+- **New Destination (new_dest)**: User has never sent money to this recipient before. Check `other_transactions` for this recipient_id. Combined with large amount and account draining, this indicates BEC fraud.
+- **Post-Withdrawal Pattern**: Transaction occurs shortly after a cash withdrawal. Check if there's a withdrawal in `other_transactions` within 1-2 hours before this transaction. Combined with new venue and location anomaly, this indicates card cloning.
+- **New Venue**: Transaction at a location where user has never been before. Check GPS locations in `sender_locations` and compare with transaction location. Combined with post-withdrawal, this indicates card cloning.
+- **Pattern Multiple Withdrawals**: Multiple withdrawals in rapid sequence (within 1-2 hours). Check `other_transactions` for withdrawal type transactions. Combined with account draining, this indicates identity verification scam.
+- **Location Anomaly**: Transaction location doesn't match user's normal patterns. Check `sender_locations` to see if user has been near this location recently. Combined with impossible travel, this indicates fraud.
+- **Impossible Travel**: User cannot physically be at transaction location given previous GPS locations. Calculate travel time between last known location and transaction location. If impossible (e.g., 100km in 10 minutes), this is fraud.
+
+Only suspicious if these patterns are present AND combined with other fraud indicators (account draining, phishing communications, etc.).
 
 **Cross-Reference Everything**: Correlate transaction data with profile, location, communications, and transaction history. Patterns emerge from correlations. **If everything aligns with normal life patterns, the transaction is likely legitimate.**
 
@@ -229,11 +271,28 @@ transaction_id | [reason1, reason2, ...]
 - Part 2: Reasons array in brackets `[reason1, reason2, ...]` - list of specific fraud indicators found
 
 **Fraud Detection Criteria**:
-Only mark as fraudulent when you have STRONG evidence of actual fraud:
-- Account drained to €0.00 (strongest indicator - THIS IS FRAUD)
-- Account drained to very low amount (< €10) combined with phishing/account takeover indicators
-- Multiple strong fraud indicators together (account drained to €0.00 + phishing + account takeover)
-- Clear evidence of account takeover or fraud scheme
+Only mark as fraudulent when you have STRONG evidence of actual fraud matching these patterns:
+
+**Pattern 1: Account Draining (BEC/Identity Verification)**:
+- Balance dropped to €0.00 (strongest indicator - THIS IS FRAUD)
+- Combined with: new_dest + amount_anomaly + time_correlation
+
+**Pattern 2: Phishing Scam (Parcel Customs Fee)**:
+- New merchant (never transacted with before)
+- Combined with: time_correlation (transaction within 3h after suspicious email/SMS)
+- Email/SMS content indicates urgency, fees, delivery issues
+
+**Pattern 3: Card Cloning (ATM Card Cloned)**:
+- Post-withdrawal pattern (transaction shortly after cash withdrawal)
+- Combined with: new_venue + location_anomaly + impossible_travel + amount_anomaly
+- **CRITICAL**: These indicators together indicate fraud even if balance is not €0.00
+
+**Pattern 4: Identity Verification Scam**:
+- Pattern_multiple_withdrawals (rapid sequence of withdrawals)
+- Combined with: location_anomaly + impossible_travel + time_correlation
+- Account draining (balance drops to €0.00 or very low < €10)
+
+**General Rule**: Multiple strong fraud indicators together (account drained to €0.00 + specific fraud patterns) OR clear evidence of specific fraud schemes (card cloning, phishing with time correlation) even without account draining.
 
 **DO NOT mark as fraudulent**:
 - ❌ **Balance of €500, €300, €200, or even €100 remaining** - This is NORMAL, NOT "near-draining"

@@ -13,6 +13,7 @@ from .nodes import (
     route_on_score,
     decision_ok,
     llm_analysis,
+    analyze_frauds_with_agent,
 )
 
 
@@ -100,6 +101,7 @@ def create_fraud_detection_graph():
     
     graph.add_node("decision_ok", decision_ok)
     graph.add_node("llm_analysis", llm_analysis)
+    graph.add_node("analyze_frauds_with_agent", analyze_frauds_with_agent)
     
     graph.add_node("get_next_transaction", get_next_transaction)
     
@@ -129,9 +131,11 @@ def create_fraud_detection_graph():
         should_continue_loop,
         {
             "continue": "process_single_transaction",
-            "end": END,
+            "end": "analyze_frauds_with_agent",
         }
     )
+    
+    graph.add_edge("analyze_frauds_with_agent", END)
     
     app = graph.compile()
     

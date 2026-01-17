@@ -18,3 +18,5 @@ class FraudState(TypedDict):
     llm_result: Optional[Dict[str, Any]]
     explanation: Optional[str]
     results: List[Dict[str, Any]]
+    agent_analysis_results: Optional[Dict[str, Any]]
+    real_frauds: Optional[Dict[str, Any]]

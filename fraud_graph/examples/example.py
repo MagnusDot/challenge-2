@@ -1,7 +1,7 @@
 """Exemple d'utilisation du graphe LangGraph pour la détection de fraude."""
 
 import asyncio
-from fraud_graph.agent import create_fraud_detection_graph
+from fraud_graph.graph import create_fraud_detection_graph
 from fraud_graph.state import FraudState
 
 
