@@ -1,67 +1,72 @@
 [
   {
-    "first_name": "Jeremy",
-    "last_name": "Manning",
-    "birth_year": 1995,
-    "salary": 17600,
-    "job": "Delivery Worker",
-    "iban": "US74Q7523569291622305266229",
+    "first_name": "Caterina",
+    "last_name": "Chindamo",
+    "birth_year": 2048,
+    "salary": 29700,
+    "job": "Digital Creator",
+    "iban": "IT49V1752823261336080000777",
     "residence": {
-      "city": "Orlando",
-      "lat": "28.4773",
-      "lng": "-81.3370"
-    }
+      "city": "Modena",
+      "lat": "44.6458",
+      "lng": "10.9257"
+    },
+    "description": "Caterina Chindamo è una creativa freelance di Modena, nata nel 2048, che si muove tra la concretezza del quotidiano e la curiosità per il mondo digitale. Lavora come Digital Creator, costruendo contenuti per marchi e progetti personali in uno studio ricavato in un appartamento illuminato dal fiume Secchia: immagini, video e microstorie che raccontano dettagli vivi con uno sguardo attento alla forma e alla semplicità. Guadagna intorno ai 29.700 euro l'anno, abbastanza per tenere in piedi la sua indipendenza artistica senza rinunciare a piccoli piaceri, e organizza circa quattro viaggi all'anno, talvolta a poche ore da casa in borghi non troppo affollati, altre volte verso metropoli lontane e dense di stimoli, anche oltre gli oceani. È pratica, ama sperimentare nuove tecniche e collabora con committenti diversi, ma conserva una vena di ingenuità digitale: non sempre riconosce subito le trappole del web e ogni tanto si lascia sorprendere da una mail o un link troppo insistente. Chi la incontra percepisce una persona concreta e curiosa, capace di trasformare una passeggiata in città o una sosta in un caffè in materiale narrativo, con lo sguardo rivolto al presente e alle possibilità che la tecnologia offre alla creatività."
   },
   {
-    "first_name": "Alexandre",
-    "last_name": "Bertin",
-    "birth_year": 1947,
-    "salary": 49700,
+    "first_name": "Eva",
+    "last_name": "Abbagnale",
+    "birth_year": 2052,
+    "salary": 21000,
+    "job": "Ride-share Driver",
+    "iban": "IT73N3214992890018160197857",
+    "residence": {
+      "city": "Bari",
+      "lat": "41.1253",
+      "lng": "16.8667"
+    },
+    "description": "Eva Abbagnale vive a Bari, con le strade dell’antico borgo e il mare Adriatico a pochi passi. Lavora come autista per una piattaforma di ride‑sharing: le sue giornate sono fatte di turni flessibili, corse brevi tra il centro storico e la stazione, e qualche servizio all’aeroporto quando il traffico lo richiede. Con una retribuzione annua intorno ai 21.000 euro affronta la città con pragmatismo, tenga d’occhio le spese e cura ogni euro guadagnato per mantenere un piccolo appartamento e pagare i conti.\n\nIl lavoro le ha insegnato a leggere le persone in pochi minuti: ascolta storie di chi sale a bordo, impara preferenze e scorci della città, e sa adattarsi ai ritmi diversi di studenti, turisti e lavoratori. Pur essendo radicata a Bari, si concede un solo viaggio vero all’anno: a volte una fuga in un borgo di poche migliaia di abitanti, altre volte una trasferta in una grande metropoli dall’altra parte del mondo; raramente rimane nell’abituale raggio quotidiano, ma quando lo fa non bada a distanze — può arrivare fino a migliaia di chilometri.\n\nSui dispositivi è pratica ma non sospettosamente prudente: a volte clicca link o offerte che sembrano utili, e ha imparato a suo prezzo a distinguere l’affidabile dall’inganno. Non ama parlare di soldi o di conti in pubblico, preferisce lasciare certi dettagli per sé. Nel quotidiano Eva è uno sguardo attento sulla città: un equilibrio di fatica e cura, abitudini consolidate e la disponibilità a partire, almeno una volta l’anno, per vedere qualcosa di diverso."
+  },
+  {
+    "first_name": "Steven",
+    "last_name": "Walters",
+    "birth_year": 2012,
+    "salary": 23500,
     "job": "Retired",
-    "iban": "FR77D8404660578702176273579",
+    "iban": "US62H6436382020998742706697",
     "residence": {
-      "city": "Argeles-sur-Mer",
-      "lat": "42.5449",
-      "lng": "3.0235"
-    }
+      "city": "Balch Springs",
+      "lat": "32.7194",
+      "lng": "-96.6151"
+    },
+    "description": "Steven Walters vive a Balch Springs, una cittadina alla periferia di Dallas dove le giornate scorrono lente ma piene di piccole cose familiari. È un pensionato che si è ritirato dalla vita lavorativa e ha trasformato la casa in un centro di attività quotidiane: cura le piante sul terrazzo, sistema la cucina con la meticolosità di chi ha sempre avuto a cuore l’ordine domestico e dedica parte del pomeriggio a piccoli lavoretti che tengono viva la routine. La sua pensione è modesta, ma sufficiente per affrontare le spese e concedersi un viaggio all’anno, spesso per vedere posti nuovi o visitare parenti lontani: talvolta una breve gita nello stato, altre volte un volo più lungo che porta a città molto diverse dalla sua.\n\nSilenzioso ma socievole, Steven conosce i vicini per nome e apprezza la tranquillità del quartiere; la sua vita sociale si costruisce intorno a incontri al mercato, chiacchierate al bar e qualche attività comunitaria per anziani. Non è molto avvezzo alle insidie del mondo digitale: usa internet e la posta elettronica per restare in contatto, ma non raramente si trova confuso davanti a messaggi sospetti e tende a fidarsi finché non impara a dubitare. Gestisce le faccende pratiche con prudenza e, pur senza grandi avventure quotidiane, sceglie con cura come spendere il tempo e il denaro, preservando la serenità che cerca nella sua routine a Balch Springs."
   },
   {
-    "first_name": "Annalisa",
-    "last_name": "Bottaro",
-    "birth_year": 2001,
-    "salary": 0,
-    "job": "Student",
-    "iban": "IT11P1463167232369347912107",
+    "first_name": "Ubaldo",
+    "last_name": "Zaccagnini",
+    "birth_year": 2046,
+    "salary": 35500,
+    "job": "Office Clerk",
+    "iban": "IT04D3311385372808229066992",
     "residence": {
-      "city": "Casalgrande",
-      "lat": "44.5898",
-      "lng": "10.7394"
-    }
+      "city": "Sant'Agata di Militello",
+      "lat": "38.0680",
+      "lng": "14.6333"
+    },
+    "description": "Ubaldo Zaccagnini è un impiegato d'ufficio che vive a Sant'Agata di Militello, dove la routine quotidiana trova ritmo tra il lungomare e gli uffici comunali. Nato nel 2046, ha costruito una vita ordinata e solida: lavora con precisione, cura pratiche e registri e porta a casa ogni mese lo stipendio che gli permette una sicurezza pratica — circa 35.500 euro l'anno. Le sue giornate sono fatte di scartoffie, telefonate e scambi con colleghi e cittadini; sa districarsi tra procedure e scadenze ma non pretende mai di correre troppo, preferendo la concretezza al clamore.\n\nViaggia due volte l'anno: a volte si tratta di piccoli spostamenti in paesi e borghi vicini, altre volte di mete lontane, perfino dall'altra parte del mondo, perché ama alternare la calma del suo paese a esperienze più vivaci e affollate. Non è un fan della tecnologia avanzata e, sebbene usi email e strumenti digitali per lavoro, tende a fidarsi eccessivamente di messaggi e richieste che dovrebbero invece suscitare sospetto: una natura di persona aperta che lo rende talvolta vulnerabile alle truffe online. A Sant'Agata mantiene uno stile di vita semplice ma dignitoso; non cerca il protagonismo, preferisce essere quel riferimento affidabile che conoscono in città e che torna a casa ogni sera con la sensazione di aver fatto il proprio dovere."
   },
   {
-    "first_name": "Gemma",
-    "last_name": "Hughes",
-    "birth_year": 1996,
-    "salary": 12900,
-    "job": "Student",
-    "iban": "GB86Y5888313451309299797923",
-    "residence": {
-      "city": "London",
-      "lat": "51.5072",
-      "lng": "-0.1275"
-    }
-  },
-  {
-    "first_name": "Alberto",
-    "last_name": "Donini",
-    "birth_year": 1954,
-    "salary": 28400,
+    "first_name": "Julian",
+    "last_name": "Bolton",
+    "birth_year": 2003,
+    "salary": 41800,
     "job": "Retired",
-    "iban": "IT41C1096713489218511576101",
+    "iban": "GB73G1063770029654120323935",
     "residence": {
-      "city": "Bresso",
-      "lat": "45.5333",
-      "lng": "9.1833"
-    }
+      "city": "Bolsover",
+      "lat": "53.2304",
+      "lng": "-1.2875"
+    },
+    "description": "Julian Bolton vive a Bolsover, nell’Inghilterra centrale, e ha fatto della cura della casa il ritmo delle sue giornate. Nato nel 2003, ha scelto presto di vivere da pensionato casalingo: organizza i pasti, tiene in ordine l’alloggio e si dedica a piccoli lavori domestici che lo tengono occupato e soddisfatto. Le sue mattine sono fatte di routine semplici — una passeggiata nel quartiere, qualche commissione al mercato locale, il tè con un vicino — mentre i pomeriggi passano tra letture, la gestione delle pratiche quotidiane e quella cura meticolosa degli spazi che per lui è una forma di serenità.\n\nNon disdegna però la novità: viaggia due volte l’anno, alternando brevi fughe in borghi vicini a volte a trasferte ben più lunghe, che possono portarlo fino a migliaia di chilometri di distanza. Ama sia i centri piccoli e raccolti sia le città più affollate e cosmopolite; preferisce programmare con calma, scegliendo mete che gli offrano un equilibrio tra tranquillità e stimolo. Il suo tenore di vita riflette una situazione economica stabile, con risorse che gli permettono di mantenere questa routine domestica e concedersi qualche viaggio all’anno. Nel complesso Julian è una presenza pacata e affidabile nel suo quartiere, capace di trovare soddisfazione nelle cose semplici senza rinunciare alla curiosità per il mondo."
   }
 ]
