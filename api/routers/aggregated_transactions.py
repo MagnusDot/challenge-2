@@ -21,28 +21,73 @@ from api.utils.data_loader import (
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 
+def _extract_user_id_from_line(line: str) -> Optional[str]:
+    """
+    Extrait l'ID utilisateur depuis une ligne From: ou To:.
+    
+    Les emails peuvent avoir le format:
+    - "Caterina Chindamo" <caterina.chindamo@example.com>
+    - caterina.chindamo@example.com
+    
+    Args:
+        line: Ligne contenant From: ou To:
+        
+    Returns:
+        L'ID utilisateur si trouvé (format: Prénom_Nom), None sinon
+    """
+    if 'From:' not in line and 'To:' not in line:
+        return None
+    
+    # Extraire le nom/ID de l'utilisateur
+    parts = line.split(':', 1)  # Split seulement sur le premier ':'
+    if len(parts) > 1:
+        user_part = parts[1].strip()
+        
+        # Si le nom est entre guillemets, l'extraire
+        # Format: "Caterina Chindamo" <email@example.com>
+        if '"' in user_part:
+            # Extraire le texte entre guillemets
+            import re
+            quoted_match = re.search(r'"([^"]+)"', user_part)
+            if quoted_match:
+                name = quoted_match.group(1)
+                # Convertir les espaces en underscores pour correspondre au format user_id
+                return name.replace(' ', '_')
+        
+        # Sinon, extraire la partie email avant le @
+        if '@' in user_part:
+            # Format: email@example.com ou <email@example.com>
+            email_part = user_part.split('@')[0].strip()
+            # Retirer les chevrons si présents
+            email_part = email_part.replace('<', '').replace('>', '').strip()
+            # Si c'est un email comme "caterina.chindamo", convertir en "caterina_chindamo"
+            return email_part.replace('.', '_')
+        
+        # Si pas d'email, retourner tel quel
+        return user_part.replace(' ', '_')
+    return None
+
+
 def parse_user_id_from_email_or_sms(content: str) -> Optional[str]:
     """
     Extrait l'ID utilisateur depuis le contenu d'un email ou SMS.
     
     Args:
-        content: Contenu de l'email ou SMS
+        content: Contenu de l'email ou SMS (peut être une ligne ou plusieurs lignes)
         
     Returns:
-        L'ID utilisateur si trouvé, None sinon
+        L'ID utilisateur si trouvé (format: Prénom_Nom), None sinon
     """
-    # Les emails et SMS contiennent généralement l'ID dans le champ From ou To
+    # Si c'est une seule ligne, l'utiliser directement
+    if '\n' not in content:
+        return _extract_user_id_from_line(content)
+    
+    # Sinon, parcourir les lignes
     lines = content.split('\n')
     for line in lines:
-        if 'From:' in line or 'To:' in line:
-            # Extraire le nom/ID de l'utilisateur
-            parts = line.split(':')
-            if len(parts) > 1:
-                user_part = parts[1].strip()
-                # Retirer l'adresse email si présente
-                if '@' in user_part:
-                    user_part = user_part.split('@')[0].strip()
-                return user_part
+        result = _extract_user_id_from_line(line)
+        if result:
+            return result
     return None
 
 
@@ -223,9 +268,24 @@ async def get_aggregated_transaction(
     sender_emails = []
     sender_sms = []
     if sender_user_id:
+        # Pour les emails, chercher dans les champs From et To
+        # car un email peut être envoyé par l'utilisateur (From) ou reçu (To)
         for email in emails:
-            email_user_id = parse_user_id_from_email_or_sms(email.mail)
-            if email_user_id and sender_user_id.lower() in email_user_id.lower():
+            email_content = email.mail
+            # Extraire les IDs depuis From et To
+            from_id = None
+            to_id = None
+            
+            lines = email_content.split('\n')
+            for line in lines:
+                if 'From:' in line:
+                    from_id = _extract_user_id_from_line(line)
+                elif 'To:' in line:
+                    to_id = _extract_user_id_from_line(line)
+            
+            # Vérifier si l'utilisateur est dans From ou To
+            if (from_id and sender_user_id.lower() in from_id.lower()) or \
+               (to_id and sender_user_id.lower() in to_id.lower()):
                 sender_emails.append(email)
         
         for sms in sms_list:
@@ -240,9 +300,23 @@ async def get_aggregated_transaction(
     recipient_emails = []
     recipient_sms = []
     if recipient_user_id:
+        # Pour les emails, chercher dans les champs From et To
         for email in emails:
-            email_user_id = parse_user_id_from_email_or_sms(email.mail)
-            if email_user_id and recipient_user_id.lower() in email_user_id.lower():
+            email_content = email.mail
+            # Extraire les IDs depuis From et To
+            from_id = None
+            to_id = None
+            
+            lines = email_content.split('\n')
+            for line in lines:
+                if 'From:' in line:
+                    from_id = _extract_user_id_from_line(line)
+                elif 'To:' in line:
+                    to_id = _extract_user_id_from_line(line)
+            
+            # Vérifier si l'utilisateur est dans From ou To
+            if (from_id and recipient_user_id.lower() in from_id.lower()) or \
+               (to_id and recipient_user_id.lower() in to_id.lower()):
                 recipient_emails.append(email)
         
         for sms in sms_list:
