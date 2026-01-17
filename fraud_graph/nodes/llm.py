@@ -2,14 +2,13 @@
 
 import os
 from pathlib import Path
-from typing import Dict, Any
 from functools import lru_cache
 
 from google.adk.agents.llm_agent import Agent
 from google.adk.models.lite_llm import LiteLlm
 
-from .state import FraudState
-from .tools import get_transaction_aggregated
+from ..state import FraudState
+from ..utils.tools import get_transaction_aggregated
 
 
 @lru_cache(maxsize=1)
@@ -18,9 +17,15 @@ def load_system_prompt() -> str:
     
     Default: system_prompt.md
     Peut être surchargé via .env: SYSTEM_PROMPT_FILE=system_prompt.md
+    
+    Returns:
+        Contenu du fichier de prompt système
+        
+    Raises:
+        FileNotFoundError: Si le fichier de prompt n'existe pas
     """
     prompt_file = os.getenv('SYSTEM_PROMPT_FILE', 'system_prompt.md')
-    prompt_path = Path(__file__).parent.parent / "Agent" / prompt_file
+    prompt_path = Path(__file__).parent.parent.parent / "Agent" / prompt_file
 
     if not prompt_path.exists():
         raise FileNotFoundError(
@@ -38,6 +43,9 @@ def create_fraud_agent() -> Agent:
     
     Returns:
         Agent Google ADK configuré
+        
+    Raises:
+        ValueError: Si OPENROUTER_API_KEY n'est pas défini
     """
     system_prompt = load_system_prompt()
     
@@ -76,7 +84,7 @@ def create_fraud_agent() -> Agent:
 
 
 async def llm_analysis(state: FraudState) -> FraudState:
-    """Node 5: Analyse LLM avec Google ADK (seulement si score > 0.5).
+    """Node d'analyse LLM avec Google ADK (seulement si score > 0.5).
     
     Args:
         state: État actuel du graphe
@@ -84,8 +92,15 @@ async def llm_analysis(state: FraudState) -> FraudState:
     Returns:
         État mis à jour avec résultat LLM et décision finale
     """
-    transaction_id = state["transaction_id"]
-    risk_score = state.get("risk_score", 0.0)
+    transaction_id = state.get("current_transaction_id")
+    
+    if not transaction_id:
+        return {
+            **state,
+            "decision": "ERROR",
+            "llm_result": {"error": "No transaction_id provided"},
+            "explanation": "Erreur: transaction_id manquant",
+        }
     
     try:
         # Création de l'agent
@@ -98,7 +113,6 @@ async def llm_analysis(state: FraudState) -> FraudState:
         response = agent.run(prompt)
         
         # Parse de la réponse (format attendu: transaction_id | [reasons])
-        # Si c'est une string, on la parse
         if isinstance(response, str):
             # Format attendu: "transaction_id | [reason1, reason2, ...]"
             if "|" in response:

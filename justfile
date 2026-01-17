@@ -183,3 +183,27 @@ web-safe PORT="8000": check-env
     @echo "🚀 Starting ADK web interface on port {{PORT}}..."
     .venv/bin/adk web --port {{PORT}}
 
+# ==== LangGraph Commands ====
+
+# Run LangGraph fraud detection (analyzes all transactions)
+# Requires API to be running (use: just api-dev)
+lang:
+    @echo "🚀 Starting LangGraph fraud detection..."
+    @echo "⚠️  Make sure API is running (just api-dev)"
+    PYTHONPATH=. .venv/bin/python fraud_graph/main.py
+    @echo "✅ LangGraph analysis complete!"
+    @echo "💾 Check fraud_graph/results/ for fraud analysis results"
+
+# Run LangGraph on a single transaction
+lang-single TRANSACTION_ID:
+    @echo "🔍 Analyzing single transaction with LangGraph..."
+    PYTHONPATH=. .venv/bin/python fraud_graph/main.py {{TRANSACTION_ID}}
+    @echo "✅ Analysis complete!"
+
+# Run LangGraph with API check
+lang-safe: check-env
+    @echo "🚀 Starting LangGraph fraud detection..."
+    @echo "⚠️  Make sure API is running (just api-dev)"
+    PYTHONPATH=. .venv/bin/python fraud_graph/main.py
+    @echo "✅ LangGraph analysis complete!"
+    @echo "💾 Check fraud_graph/results/ for fraud analysis results"

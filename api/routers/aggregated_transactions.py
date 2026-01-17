@@ -20,6 +20,31 @@ from api.utils.data_loader import (
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
+
+@router.get("/ids")
+async def get_all_transaction_ids(
+    format: str = Query("json", description="Response format: 'json' or 'toon'", alias="format")
+):
+    """Récupère tous les IDs de transactions du dataset.
+    
+    Returns:
+        Liste de tous les transaction_id disponibles
+    """
+    try:
+        transactions = load_transactions()
+        transaction_ids = [tx.transaction_id for tx in transactions]
+        
+        return format_response(
+            {"transaction_ids": transaction_ids, "count": len(transaction_ids)},
+            response_format=format.lower()
+        )
+    except (FileNotFoundError, ValueError) as e:
+        from api.utils.data_loader import get_dataset_folder
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error loading data from dataset '{get_dataset_folder()}': {str(e)}"
+        )
+
 def _extract_user_id_from_line(line: str) -> Optional[str]:
 
     if 'From:' not in line and 'To:' not in line:

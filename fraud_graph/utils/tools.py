@@ -1,8 +1,8 @@
-"""Tools for LangGraph agent."""
+"""Outils pour l'agent LangGraph."""
 
-from typing import Any, Dict, Optional
 import json
 from datetime import datetime
+from typing import Optional
 
 from Agent.helpers.http_client import make_api_request
 
