@@ -21,19 +21,19 @@ def load_system_prompt() -> str:
     with open(prompt_path, 'r', encoding='utf-8') as f:
         return f.read()
 
-def create_challenge_agent(model: str = "openai/gpt-4.1") -> Agent:
+def create_challenge_agent(model: str = "openrouter/openai/gpt-4.1-mini") -> Agent:
 
     system_prompt = load_system_prompt()
 
-    if model.startswith("openai/") or model.startswith("openrouter/"):
+    openrouter_key = os.getenv('OPENROUTER_API_KEY')
+    if not openrouter_key:
+        raise ValueError("OPENROUTER_API_KEY environment variable is required")
 
-        llm_model = LiteLlm(
-            model=model,
-            parallel_tool_calls=False,
-            response_format={"type": "json_object"},
-        )
-    else:
-        llm_model = model
+    llm_model = LiteLlm(
+        model=model,
+        parallel_tool_calls=False,
+        response_format={"type": "json_object"},
+    )
 
     agent = Agent(
         model=llm_model,

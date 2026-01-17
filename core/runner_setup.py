@@ -5,7 +5,7 @@ from google.adk.sessions.in_memory_session_service import InMemorySessionService
 
 def setup_runner():
 
-    model = os.getenv('MODEL', 'openrouter/openai/gpt-4.1')
+    model = os.getenv('MODEL', 'openrouter/openai/gpt-4.1-mini')
     print(f"\n🤖 Creating challenge agent with model: {model}")
 
     use_cache = os.getenv('LITELLM_CACHE', 'false').lower() == 'true'
