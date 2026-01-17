@@ -2,8 +2,11 @@
 
 from ..state import FraudState
 
-# Seuil de score pour décider d'appeler le LLM
-RISK_SCORE_THRESHOLD = 0.5
+# Seuil de score pour considérer une transaction comme légitime
+# Seuil bas : seulement les scores très faibles (< 0.15) sont considérés comme légitimes
+# Entre 0.15 et 0.25 : zone grise (sera taggé comme SUSPECT)
+# > 0.25 : SUSPECT (sauvegardé dans fraud.json)
+LEGITIMATE_SCORE_THRESHOLD = 0.15
 
 
 def route_on_score(state: FraudState) -> str:
@@ -24,23 +27,25 @@ def route_on_score(state: FraudState) -> str:
 def decision_ok(state: FraudState) -> FraudState:
     """Node de sortie directe sans LLM.
     
-    Gère à la fois les transactions légitimes et frauduleuses sans appel LLM.
+    Système permissif de tagging : seulement les scores très bas sont légitimes.
+    Tout le reste est taggé comme SUSPECT pour tri ultérieur.
     
     Args:
         state: État actuel du graphe
         
     Returns:
-        État final avec décision appropriée (LEGITIMATE ou FRAUDULENT)
+        État final avec décision appropriée (LEGITIMATE ou SUSPECT)
     """
     risk_score = state.get("risk_score", 0.0)
     
-    # Décision basée sur le score de risque (sans LLM)
-    if risk_score > RISK_SCORE_THRESHOLD:
-        decision = "FRAUDULENT"
-        explanation = f"Score de risque élevé ({risk_score}): transaction suspecte détectée"
-    else:
+    # Système permissif : seulement les scores très bas (< 0.1) sont légitimes
+    # Tout le reste est taggé comme SUSPECT pour tri ultérieur
+    if risk_score < LEGITIMATE_SCORE_THRESHOLD:
         decision = "LEGITIMATE"
-        explanation = f"Score de risque faible ({risk_score}): transaction légitime"
+        explanation = f"Score de risque très faible ({risk_score:.2f}): transaction légitime"
+    else:
+        decision = "SUSPECT"
+        explanation = f"Score de risque ({risk_score:.2f}): élément suspect détecté (à trier)"
     
     return {
         **state,

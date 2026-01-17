@@ -21,7 +21,8 @@ from .nodes import (
 def process_single_transaction(state: FraudState) -> FraudState:
     """Initialise le traitement d'une transaction unique.
     
-    Prend la première transaction de la liste et la marque comme en cours de traitement.
+    Utilise current_transaction_id s'il existe déjà (suite à get_next_transaction),
+    sinon prend la première transaction de la liste.
     
     Args:
         state: État avec transaction_ids
@@ -30,6 +31,7 @@ def process_single_transaction(state: FraudState) -> FraudState:
         État avec current_transaction_id défini
     """
     transaction_ids = state.get("transaction_ids", [])
+    current_id = state.get("current_transaction_id")
     
     if not transaction_ids:
         return {
@@ -37,8 +39,18 @@ def process_single_transaction(state: FraudState) -> FraudState:
             "current_transaction_id": None,
         }
     
-    # Prendre la première transaction de la liste
-    current_id = transaction_ids[0]
+    # Si current_transaction_id existe déjà (suite à get_next_transaction), le garder
+    # Sinon, prendre la première transaction de la liste
+    if not current_id:
+        current_id = transaction_ids[0]
+        print(f"🔄 Début du traitement de la transaction: {current_id} (1/{len(transaction_ids)})")
+    else:
+        # Trouver l'index pour l'affichage
+        try:
+            index = transaction_ids.index(current_id) + 1
+            print(f"🔄 Traitement de la transaction: {current_id} ({index}/{len(transaction_ids)})")
+        except ValueError:
+            print(f"🔄 Traitement de la transaction: {current_id}")
     
     return {
         **state,
@@ -70,12 +82,15 @@ def get_next_transaction(state: FraudState) -> FraudState:
         # Prendre la transaction suivante
         if current_index + 1 < len(transaction_ids):
             next_id = transaction_ids[current_index + 1]
+            print(f"➡️  Passage à la transaction suivante: {next_id} (index {current_index + 1}/{len(transaction_ids)})")
             return {
                 **state,
                 "current_transaction_id": next_id,
             }
+        else:
+            print(f"✅ Toutes les transactions ont été traitées ({len(transaction_ids)} transactions)")
     except ValueError:
-        pass
+        print(f"⚠️  Transaction {current_id} non trouvée dans la liste")
     
     # Plus de transactions à traiter
     return {

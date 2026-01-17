@@ -1,0 +1,458 @@
+[
+  {
+    "fraud_info": {
+      "transaction_id": "082eeaaa-64e9-4422-8764-481d6d8bd7f4",
+      "fraud_scenario": "parcel_customs_fee",
+      "expected_signals": [
+        "new_merchant",
+        "time_correlation"
+      ],
+      "timestamp": "2025-12-19T23:03:44.896657"
+    },
+    "api_data": {
+      "transaction": {
+        "transaction_id": "082eeaaa-64e9-4422-8764-481d6d8bd7f4",
+        "sender_id": "CHND-CTRN-800-MOD-0",
+        "recipient_id": "BTMRK90963",
+        "transaction_type": "e-commerce",
+        "amount": 61.09,
+        "location": "MarketNest Online",
+        "payment_method": "debit card",
+        "sender_iban": "IT49V1752823261336080000777",
+        "recipient_iban": "IT43R2059612665935725323577734",
+        "balance_after": 186.5,
+        "description": "",
+        "timestamp": "2025-12-19T23:03:44.896657",
+        "is_fake_recipient": ""
+      },
+      "sender": {
+        "first_name": "Caterina",
+        "last_name": "Chindamo",
+        "birth_year": 2048,
+        "salary": 29700,
+        "job": "Digital Creator",
+        "iban": "IT49V1752823261336080000777",
+        "residence": {
+          "city": "Modena",
+          "lat": "44.6458",
+          "lng": "10.9257"
+        },
+        "biotag": "CHND-CTRN-800-MOD-0",
+        "description": "Caterina Chindamo è una creativa freelance di Modena, nata nel 2048, che si muove tra la concretezza del quotidiano e la curiosità per il mondo digitale. Lavora come Digital Creator, costruendo contenuti per marchi e progetti personali in uno studio ricavato in un appartamento illuminato dal fiume Secchia: immagini, video e microstorie che raccontano dettagli vivi con uno sguardo attento alla forma e alla semplicità. Guadagna intorno ai 29.700 euro l'anno, abbastanza per tenere in piedi la sua indipendenza artistica senza rinunciare a piccoli piaceri, e organizza circa quattro viaggi all'anno, talvolta a poche ore da casa in borghi non troppo affollati, altre volte verso metropoli lontane e dense di stimoli, anche oltre gli oceani. È pratica, ama sperimentare nuove tecniche e collabora con committenti diversi, ma conserva una vena di ingenuità digitale: non sempre riconosce subito le trappole del web e ogni tanto si lascia sorprendere da una mail o un link troppo insistente. Chi la incontra percepisce una persona concreta e curiosa, capace di trasformare una passeggiata in città o una sosta in un caffè in materiale narrativo, con lo sguardo rivolto al presente e alle possibilità che la tecnologia offre alla creatività.",
+        "other_transactions": []
+      },
+      "recipient": null,
+      "sender_emails": [
+        {
+          "mail": "From: \"Daniela Rossi\" <d.rossi@parcel-clearance-secure.net>\nTo: \"Caterina Chindamo\" <caterina.chindamo@example.com>\nSubject: Immediate Action Required: Unpaid Customs Fee for Your Parcel in Modena\nDate: Fri, 19 Dec 2025 21:24:44 +0100\nMIME-Version: 1.0\nContent-Type: text/html; charset=\"utf-8\"\nContent-Transfer-Encoding: 7bit\n\nCustoms Notice\n\n International Parcel & Customs\n\n URGENT: ACTION REQUIRED\n\n Unpaid customs fee for parcel being held in Modena\n\n Dear Caterina,\n\n Our records indicate a parcel addressed to you in Modena is currently being held at customs for an outstanding clearance fee. This can happen when import duties or processing fees remain unpaid.\n\n Parcel destination: Modena, IT\n\n Reference: MDN-3182\n\n Amount due: €24.95 (customs & handling)\n\n Please complete the secure customs payment to release your parcel. If payment is not received within 48 hours, the shipment will be returned to sender and an additional administrative charge may apply.\n\n Pay Customs Fee Now\n View Tracking & Details\n\n Why this happened\n\n Shipments arriving from outside the EU may be subject to customs inspection and duties. The fee shown is a standard handling payment to cover taxes and local processing. Paying via the link above will immediately release your parcel for local delivery in Modena.\n\n If you have already paid this fee through another channel, please confirm your payment here to avoid duplicate actions.\n\n If you need assistance, contact our Parcel Recovery Team: support@parcel-clearance-secure.net\n\n Sincerely,\nDaniela Rossi\nParcel Recovery Team\n\n This message was sent to Caterina regarding a held parcel in Modena. For security, do not share full account details by email. This is an automated notification from International Parcel & Customs."
+        },
+        {
+          "mail": "From: \"Maya Rossi\" <support@creatorshub.com>\nTo: \"Caterina Chindamo\" <caterina.chindamo@example.com>\nSubject: You're invited: Modena Digital Creators Meetup & Curated Resources\nDate: Fri, 19 Dec 2025 21:43:12 +0100\nMIME-Version: 1.0\nContent-Type: text/html; charset=\"utf-8\"\nContent-Transfer-Encoding: 7bit\n\nModena Digital Creators Meetup\n\n Creators Hub\n\n Local events & creator resources\n\n Hello Caterina,\n\n We’re excited to invite you—an active Digital Creator in Modena—to our upcoming in-person meetup and knowledge-share session. This is a great chance to connect with other creators, share project ideas, and explore local collaboration opportunities.\n\n Event: Modena Digital Creators Meetup\n\n Location: Central Modena (meetup point details provided after RSVP)\n\n Date & Time: Thursday evening — small-group sessions and coffee chat\n\n Reserve your spot today. Space is limited to keep the gathering focused and useful for everyone.\n\n RSVP on Eventbrite\n Add to calendar\n\n Resources for you\n\n To help you prepare, we curated a few useful resources for Digital Creators:\n\n Short-form video strategies (YouTube playlist)\n\n Creators networking group on LinkedIn\n\n Quick portfolio tips (Wix guides)\n\n If you'd like, you can update your preferences or confirm your profile so we can tailor future invites and resources to your interests:\n\n Manage my profile\n\n If you have any questions, reply to this email or reach out to our local coordinator. We’re looking forward to meeting fellow creators from Modena and nearby cities.\n\n Warm regards,\n\n Maya Rossi\n\n Community & Events Lead — Creators Hub\n\n For logistical reasons we may follow up with a confirmation message. This email was sent to you because you're listed as a creator in the Modena area. If this reached you in error, you can unsubscribe below.\n\n Creators Hub\nVia Emilia Centro, Modena • support@creatorshub.com\n\n Unsubscribe • Privacy Policy"
+        }
+      ],
+      "recipient_emails": [],
+      "sender_sms": [],
+      "recipient_sms": [],
+      "sender_locations": [],
+      "recipient_locations": []
+    }
+  },
+  {
+    "fraud_info": {
+      "transaction_id": "5caccd4e-3f73-4bc5-88a2-f5779448143b",
+      "fraud_scenario": "identity_verification",
+      "expected_signals": [
+        "location_anomaly",
+        "time_correlation",
+        "pattern_multiple_withdrawals",
+        "impossible_travel"
+      ],
+      "timestamp": "2026-01-02T16:30:25.267075"
+    },
+    "api_data": {
+      "transaction": {
+        "transaction_id": "5caccd4e-3f73-4bc5-88a2-f5779448143b",
+        "sender_id": "CHND-CTRN-800-MOD-0",
+        "recipient_id": "",
+        "transaction_type": "withdrawal",
+        "amount": 200.0,
+        "location": "Genova - ATM Piazza della Libertà",
+        "payment_method": "debit card",
+        "sender_iban": "IT49V1752823261336080000777",
+        "recipient_iban": "",
+        "balance_after": 47.59,
+        "description": "",
+        "timestamp": "2026-01-02T16:30:25.267075",
+        "is_fake_recipient": ""
+      },
+      "sender": {
+        "first_name": "Caterina",
+        "last_name": "Chindamo",
+        "birth_year": 2048,
+        "salary": 29700,
+        "job": "Digital Creator",
+        "iban": "IT49V1752823261336080000777",
+        "residence": {
+          "city": "Modena",
+          "lat": "44.6458",
+          "lng": "10.9257"
+        },
+        "biotag": "CHND-CTRN-800-MOD-0",
+        "description": "Caterina Chindamo è una creativa freelance di Modena, nata nel 2048, che si muove tra la concretezza del quotidiano e la curiosità per il mondo digitale. Lavora come Digital Creator, costruendo contenuti per marchi e progetti personali in uno studio ricavato in un appartamento illuminato dal fiume Secchia: immagini, video e microstorie che raccontano dettagli vivi con uno sguardo attento alla forma e alla semplicità. Guadagna intorno ai 29.700 euro l'anno, abbastanza per tenere in piedi la sua indipendenza artistica senza rinunciare a piccoli piaceri, e organizza circa quattro viaggi all'anno, talvolta a poche ore da casa in borghi non troppo affollati, altre volte verso metropoli lontane e dense di stimoli, anche oltre gli oceani. È pratica, ama sperimentare nuove tecniche e collabora con committenti diversi, ma conserva una vena di ingenuità digitale: non sempre riconosce subito le trappole del web e ogni tanto si lascia sorprendere da una mail o un link troppo insistente. Chi la incontra percepisce una persona concreta e curiosa, capace di trasformare una passeggiata in città o una sosta in un caffè in materiale narrativo, con lo sguardo rivolto al presente e alle possibilità che la tecnologia offre alla creatività.",
+        "other_transactions": [
+          {
+            "transaction_id": "2d8c8101-3a6c-42d1-af73-12ba587c9722",
+            "sender_id": "CHND-CTRN-800-MOD-0",
+            "recipient_id": "",
+            "transaction_type": "withdrawal",
+            "amount": 300.0,
+            "location": "Genova - ATM Via Garibaldi",
+            "payment_method": "debit card",
+            "sender_iban": "IT49V1752823261336080000777",
+            "recipient_iban": "",
+            "balance_after": 0.0,
+            "description": "",
+            "timestamp": "2026-01-02T17:23:25.267075",
+            "is_fake_recipient": ""
+          }
+        ]
+      },
+      "recipient": null,
+      "sender_emails": [],
+      "recipient_emails": [],
+      "sender_sms": [],
+      "recipient_sms": [],
+      "sender_locations": [],
+      "recipient_locations": []
+    }
+  },
+  {
+    "fraud_info": {
+      "transaction_id": "310da5e2-21fc-4413-90ec-41181742c912",
+      "fraud_scenario": "identity_verification",
+      "expected_signals": [
+        "location_anomaly",
+        "time_correlation",
+        "pattern_multiple_withdrawals",
+        "impossible_travel"
+      ],
+      "timestamp": "2026-01-04T23:37:47.400846"
+    },
+    "api_data": {
+      "transaction": {
+        "transaction_id": "310da5e2-21fc-4413-90ec-41181742c912",
+        "sender_id": "ZCCG-BLDU-7FE-SAN-0",
+        "recipient_id": "",
+        "transaction_type": "withdrawal",
+        "amount": 200.0,
+        "location": "Palermo - ATM Via Roma Square",
+        "payment_method": "debit card",
+        "sender_iban": "IT04D3311385372808229066992",
+        "recipient_iban": "",
+        "balance_after": 106.86,
+        "description": "",
+        "timestamp": "2026-01-04T23:37:47.400846",
+        "is_fake_recipient": ""
+      },
+      "sender": {
+        "first_name": "Ubaldo",
+        "last_name": "Zaccagnini",
+        "birth_year": 2046,
+        "salary": 35500,
+        "job": "Office Clerk",
+        "iban": "IT04D3311385372808229066992",
+        "residence": {
+          "city": "Sant'Agata di Militello",
+          "lat": "38.0680",
+          "lng": "14.6333"
+        },
+        "biotag": "ZCCG-BLDU-7FE-SAN-0",
+        "description": "Ubaldo Zaccagnini è un impiegato d'ufficio che vive a Sant'Agata di Militello, dove la routine quotidiana trova ritmo tra il lungomare e gli uffici comunali. Nato nel 2046, ha costruito una vita ordinata e solida: lavora con precisione, cura pratiche e registri e porta a casa ogni mese lo stipendio che gli permette una sicurezza pratica — circa 35.500 euro l'anno. Le sue giornate sono fatte di scartoffie, telefonate e scambi con colleghi e cittadini; sa districarsi tra procedure e scadenze ma non pretende mai di correre troppo, preferendo la concretezza al clamore.\n\nViaggia due volte l'anno: a volte si tratta di piccoli spostamenti in paesi e borghi vicini, altre volte di mete lontane, perfino dall'altra parte del mondo, perché ama alternare la calma del suo paese a esperienze più vivaci e affollate. Non è un fan della tecnologia avanzata e, sebbene usi email e strumenti digitali per lavoro, tende a fidarsi eccessivamente di messaggi e richieste che dovrebbero invece suscitare sospetto: una natura di persona aperta che lo rende talvolta vulnerabile alle truffe online. A Sant'Agata mantiene uno stile di vita semplice ma dignitoso; non cerca il protagonismo, preferisce essere quel riferimento affidabile che conoscono in città e che torna a casa ogni sera con la sensazione di aver fatto il proprio dovere.",
+        "other_transactions": [
+          {
+            "transaction_id": "852e51f0-e44f-40de-96ae-0c40322006fc",
+            "sender_id": "ZCCG-BLDU-7FE-SAN-0",
+            "recipient_id": "",
+            "transaction_type": "withdrawal",
+            "amount": 50.0,
+            "location": "Palermo - ATM Via Libertà",
+            "payment_method": "debit card",
+            "sender_iban": "IT04D3311385372808229066992",
+            "recipient_iban": "",
+            "balance_after": 256.86,
+            "description": "",
+            "timestamp": "2026-01-04T23:53:47.400846",
+            "is_fake_recipient": ""
+          }
+        ]
+      },
+      "recipient": null,
+      "sender_emails": [
+        {
+          "mail": "From: \"Elena Russo\" <elena.russo@mediterraneancorp.com>\nTo: \"Ubaldo Zaccagnini\" <ubaldo.zaccagnini@example.com>\nSubject: Monthly Update: Resources & Local Services for Sant'Agata di Militello\nDate: Tue, 23 Dec 2025 11:22:16 +0100\nMIME-Version: 1.0\nContent-Type: text/html; charset=\"utf-8\"\nContent-Transfer-Encoding: 7bit\n\nMonthly Update\n\n Mediterranea Office — HR & Local Resources\n\n Dear Ubaldo,\n\n We hope you're doing well in Sant'Agata di Militello. This month's update includes a few useful resources and reminders tailored for your role as an Office Clerk.\n\n Quick Actions\n\n Access your employee portal\n View payslips, update contact details, and enroll in training.\n\n Open Employee Portal\n\n Schedule & time-off\n Submit requests and check approval status.\n\n Submit request\n\n Recommended resources\n\n Online training modules for administrative staff: LinkedIn Learning\n\n Order office supplies (approved vendor): Amazon Business\n\n Local municipal services and announcements for Sant'Agata di Militello: Italia - Local Information\n\n Health & workplace reminders\n\n Please remember to keep your workstation ergonomically set up and to submit any required compliance training by the end of the month. If you need assistance, HR is available to schedule a short check-in.\n\n If you need help\n Contact HR at elena.russo@mediterraneancorp.com or call +39 0941 000 123 (Mon–Fri, 09:00–17:00 CET).\n\n Best regards,\nElena Russo\nHR Manager — Mediterranea Office\n\n © Mediterranea Office • Sant'Agata di Militello\n\n To manage your communication preferences or unsubscribe, visit https://www.mediterraneancorp.com/preferences"
+        },
+        {
+          "mail": "From: \"Lucia Romano\" <lucia.romano@comune.santagatamilitello.it>\nTo: \"Ubaldo Zaccagnini\" <ubaldo.zaccagnini@example.com>\nSubject: Municipal Update: Training & Administrative Reminders for Office Clerks\nDate: Mon, 12 Jan 2026 12:41:08 +0100\nMIME-Version: 1.0\nContent-Type: text/html; charset=\"utf-8\"\nContent-Transfer-Encoding: 7bit\n\nMunicipal Update\n\n Sant'Agata di Militello — Municipal Office\n\n Hello Ubaldo,\n\n We hope you're doing well. This message contains a few important administrative updates and upcoming items relevant to your role as an Office Clerk. Please review and follow the action items below at your earliest convenience.\n\n 1) Mandatory Training Session\n\n Topic: Records Management & Public Service Procedures\n\n Date: Wednesday, 3 March — Time: 09:00–12:00 — Location: Municipal Hall, Room A\n\n Add to Google Calendar\n\n 2) Administrative Reminders\n\n Please ensure that all client-facing documents follow the updated template available on the HR portal.\n\n Submit your weekly activity log by Friday 17:00 via the staff portal.\n\n Report any changes to your contact information to HR using the link below.\n\n Access the HR portal • Email HR\n\n 3) Resources & Local Guidance\n\n For reference on regional procedures and public service guidelines, consult the national resources below:\n\n Italian Government — Official Portal\n\n VisitItaly — Regional & Tourism Information\n\n If you have any questions or need to arrange an alternative training time, please reply to this email or contact the HR office directly.\n\n Best regards,\n\n Lucia Romano\nHuman Resources Manager\nSant'Agata di Militello Municipal Office\n\n Contact: lucia.romano@comune.santagatamilitello.it | Phone: +39 0941 000000\n\n Office address: Piazza Municipio, 98076 Sant'Agata di Militello (ME)\n\n This message was sent to Ubaldo at the municipal staff distribution list. If you believe you received this in error, please contact HR."
+        }
+      ],
+      "recipient_emails": [],
+      "sender_sms": [
+        {
+          "id_user": "Ubaldo_Zaccagnini",
+          "sms": "From: Local Service Team\nTo: +18090077137\nDate: 2026-01-04 21:30:07\nMessage: Hi Ubaldo! Thanks for being with us. Don't forget to check our website for the latest offers! Best, Your Local Service Team.\n"
+        },
+        {
+          "id_user": "Ubaldo_Zaccagnini",
+          "sms": "From: Customer Service\nTo: +18090077137\nDate: 2026-01-04 23:05:27\nMessage: Hi Ubaldo! Thank you for being a valued member. We appreciate your support. If you have any questions, feel free to reach out! - Customer Service\n"
+        }
+      ],
+      "recipient_sms": [],
+      "sender_locations": [],
+      "recipient_locations": []
+    }
+  },
+  {
+    "fraud_info": {
+      "transaction_id": "852e51f0-e44f-40de-96ae-0c40322006fc",
+      "fraud_scenario": "identity_verification",
+      "expected_signals": [
+        "location_anomaly",
+        "time_correlation",
+        "pattern_multiple_withdrawals",
+        "impossible_travel"
+      ],
+      "timestamp": "2026-01-04T23:53:47.400846"
+    },
+    "api_data": {
+      "transaction": {
+        "transaction_id": "852e51f0-e44f-40de-96ae-0c40322006fc",
+        "sender_id": "ZCCG-BLDU-7FE-SAN-0",
+        "recipient_id": "",
+        "transaction_type": "withdrawal",
+        "amount": 50.0,
+        "location": "Palermo - ATM Via Libertà",
+        "payment_method": "debit card",
+        "sender_iban": "IT04D3311385372808229066992",
+        "recipient_iban": "",
+        "balance_after": 256.86,
+        "description": "",
+        "timestamp": "2026-01-04T23:53:47.400846",
+        "is_fake_recipient": ""
+      },
+      "sender": {
+        "first_name": "Ubaldo",
+        "last_name": "Zaccagnini",
+        "birth_year": 2046,
+        "salary": 35500,
+        "job": "Office Clerk",
+        "iban": "IT04D3311385372808229066992",
+        "residence": {
+          "city": "Sant'Agata di Militello",
+          "lat": "38.0680",
+          "lng": "14.6333"
+        },
+        "biotag": "ZCCG-BLDU-7FE-SAN-0",
+        "description": "Ubaldo Zaccagnini è un impiegato d'ufficio che vive a Sant'Agata di Militello, dove la routine quotidiana trova ritmo tra il lungomare e gli uffici comunali. Nato nel 2046, ha costruito una vita ordinata e solida: lavora con precisione, cura pratiche e registri e porta a casa ogni mese lo stipendio che gli permette una sicurezza pratica — circa 35.500 euro l'anno. Le sue giornate sono fatte di scartoffie, telefonate e scambi con colleghi e cittadini; sa districarsi tra procedure e scadenze ma non pretende mai di correre troppo, preferendo la concretezza al clamore.\n\nViaggia due volte l'anno: a volte si tratta di piccoli spostamenti in paesi e borghi vicini, altre volte di mete lontane, perfino dall'altra parte del mondo, perché ama alternare la calma del suo paese a esperienze più vivaci e affollate. Non è un fan della tecnologia avanzata e, sebbene usi email e strumenti digitali per lavoro, tende a fidarsi eccessivamente di messaggi e richieste che dovrebbero invece suscitare sospetto: una natura di persona aperta che lo rende talvolta vulnerabile alle truffe online. A Sant'Agata mantiene uno stile di vita semplice ma dignitoso; non cerca il protagonismo, preferisce essere quel riferimento affidabile che conoscono in città e che torna a casa ogni sera con la sensazione di aver fatto il proprio dovere.",
+        "other_transactions": [
+          {
+            "transaction_id": "310da5e2-21fc-4413-90ec-41181742c912",
+            "sender_id": "ZCCG-BLDU-7FE-SAN-0",
+            "recipient_id": "",
+            "transaction_type": "withdrawal",
+            "amount": 200.0,
+            "location": "Palermo - ATM Via Roma Square",
+            "payment_method": "debit card",
+            "sender_iban": "IT04D3311385372808229066992",
+            "recipient_iban": "",
+            "balance_after": 106.86,
+            "description": "",
+            "timestamp": "2026-01-04T23:37:47.400846",
+            "is_fake_recipient": ""
+          }
+        ]
+      },
+      "recipient": null,
+      "sender_emails": [
+        {
+          "mail": "From: \"Elena Russo\" <elena.russo@mediterraneancorp.com>\nTo: \"Ubaldo Zaccagnini\" <ubaldo.zaccagnini@example.com>\nSubject: Monthly Update: Resources & Local Services for Sant'Agata di Militello\nDate: Tue, 23 Dec 2025 11:22:16 +0100\nMIME-Version: 1.0\nContent-Type: text/html; charset=\"utf-8\"\nContent-Transfer-Encoding: 7bit\n\nMonthly Update\n\n Mediterranea Office — HR & Local Resources\n\n Dear Ubaldo,\n\n We hope you're doing well in Sant'Agata di Militello. This month's update includes a few useful resources and reminders tailored for your role as an Office Clerk.\n\n Quick Actions\n\n Access your employee portal\n View payslips, update contact details, and enroll in training.\n\n Open Employee Portal\n\n Schedule & time-off\n Submit requests and check approval status.\n\n Submit request\n\n Recommended resources\n\n Online training modules for administrative staff: LinkedIn Learning\n\n Order office supplies (approved vendor): Amazon Business\n\n Local municipal services and announcements for Sant'Agata di Militello: Italia - Local Information\n\n Health & workplace reminders\n\n Please remember to keep your workstation ergonomically set up and to submit any required compliance training by the end of the month. If you need assistance, HR is available to schedule a short check-in.\n\n If you need help\n Contact HR at elena.russo@mediterraneancorp.com or call +39 0941 000 123 (Mon–Fri, 09:00–17:00 CET).\n\n Best regards,\nElena Russo\nHR Manager — Mediterranea Office\n\n © Mediterranea Office • Sant'Agata di Militello\n\n To manage your communication preferences or unsubscribe, visit https://www.mediterraneancorp.com/preferences"
+        },
+        {
+          "mail": "From: \"Lucia Romano\" <lucia.romano@comune.santagatamilitello.it>\nTo: \"Ubaldo Zaccagnini\" <ubaldo.zaccagnini@example.com>\nSubject: Municipal Update: Training & Administrative Reminders for Office Clerks\nDate: Mon, 12 Jan 2026 12:41:08 +0100\nMIME-Version: 1.0\nContent-Type: text/html; charset=\"utf-8\"\nContent-Transfer-Encoding: 7bit\n\nMunicipal Update\n\n Sant'Agata di Militello — Municipal Office\n\n Hello Ubaldo,\n\n We hope you're doing well. This message contains a few important administrative updates and upcoming items relevant to your role as an Office Clerk. Please review and follow the action items below at your earliest convenience.\n\n 1) Mandatory Training Session\n\n Topic: Records Management & Public Service Procedures\n\n Date: Wednesday, 3 March — Time: 09:00–12:00 — Location: Municipal Hall, Room A\n\n Add to Google Calendar\n\n 2) Administrative Reminders\n\n Please ensure that all client-facing documents follow the updated template available on the HR portal.\n\n Submit your weekly activity log by Friday 17:00 via the staff portal.\n\n Report any changes to your contact information to HR using the link below.\n\n Access the HR portal • Email HR\n\n 3) Resources & Local Guidance\n\n For reference on regional procedures and public service guidelines, consult the national resources below:\n\n Italian Government — Official Portal\n\n VisitItaly — Regional & Tourism Information\n\n If you have any questions or need to arrange an alternative training time, please reply to this email or contact the HR office directly.\n\n Best regards,\n\n Lucia Romano\nHuman Resources Manager\nSant'Agata di Militello Municipal Office\n\n Contact: lucia.romano@comune.santagatamilitello.it | Phone: +39 0941 000000\n\n Office address: Piazza Municipio, 98076 Sant'Agata di Militello (ME)\n\n This message was sent to Ubaldo at the municipal staff distribution list. If you believe you received this in error, please contact HR."
+        }
+      ],
+      "recipient_emails": [],
+      "sender_sms": [
+        {
+          "id_user": "Ubaldo_Zaccagnini",
+          "sms": "From: Local Service Team\nTo: +18090077137\nDate: 2026-01-04 21:30:07\nMessage: Hi Ubaldo! Thanks for being with us. Don't forget to check our website for the latest offers! Best, Your Local Service Team.\n"
+        },
+        {
+          "id_user": "Ubaldo_Zaccagnini",
+          "sms": "From: Customer Service\nTo: +18090077137\nDate: 2026-01-04 23:05:27\nMessage: Hi Ubaldo! Thank you for being a valued member. We appreciate your support. If you have any questions, feel free to reach out! - Customer Service\n"
+        }
+      ],
+      "recipient_sms": [],
+      "sender_locations": [],
+      "recipient_locations": []
+    }
+  },
+  {
+    "fraud_info": {
+      "transaction_id": "751a8bfa-7e3c-4d49-b6d5-5829919528f3",
+      "fraud_scenario": "parcel_customs_fee",
+      "expected_signals": [
+        "new_merchant",
+        "time_correlation"
+      ],
+      "timestamp": "2026-01-11T06:46:05.939403"
+    },
+    "api_data": {
+      "transaction": {
+        "transaction_id": "751a8bfa-7e3c-4d49-b6d5-5829919528f3",
+        "sender_id": "CHND-CTRN-800-MOD-0",
+        "recipient_id": "BTMRK59842",
+        "transaction_type": "e-commerce",
+        "amount": 65.83,
+        "location": "MarketPlace Avenue",
+        "payment_method": "Google Pay",
+        "sender_iban": "IT49V1752823261336080000777",
+        "recipient_iban": "IT24N1925754733972476324465905",
+        "balance_after": 181.76,
+        "description": "",
+        "timestamp": "2026-01-11T06:46:05.939403",
+        "is_fake_recipient": ""
+      },
+      "sender": {
+        "first_name": "Caterina",
+        "last_name": "Chindamo",
+        "birth_year": 2048,
+        "salary": 29700,
+        "job": "Digital Creator",
+        "iban": "IT49V1752823261336080000777",
+        "residence": {
+          "city": "Modena",
+          "lat": "44.6458",
+          "lng": "10.9257"
+        },
+        "biotag": "CHND-CTRN-800-MOD-0",
+        "description": "Caterina Chindamo è una creativa freelance di Modena, nata nel 2048, che si muove tra la concretezza del quotidiano e la curiosità per il mondo digitale. Lavora come Digital Creator, costruendo contenuti per marchi e progetti personali in uno studio ricavato in un appartamento illuminato dal fiume Secchia: immagini, video e microstorie che raccontano dettagli vivi con uno sguardo attento alla forma e alla semplicità. Guadagna intorno ai 29.700 euro l'anno, abbastanza per tenere in piedi la sua indipendenza artistica senza rinunciare a piccoli piaceri, e organizza circa quattro viaggi all'anno, talvolta a poche ore da casa in borghi non troppo affollati, altre volte verso metropoli lontane e dense di stimoli, anche oltre gli oceani. È pratica, ama sperimentare nuove tecniche e collabora con committenti diversi, ma conserva una vena di ingenuità digitale: non sempre riconosce subito le trappole del web e ogni tanto si lascia sorprendere da una mail o un link troppo insistente. Chi la incontra percepisce una persona concreta e curiosa, capace di trasformare una passeggiata in città o una sosta in un caffè in materiale narrativo, con lo sguardo rivolto al presente e alle possibilità che la tecnologia offre alla creatività.",
+        "other_transactions": []
+      },
+      "recipient": null,
+      "sender_emails": [],
+      "recipient_emails": [],
+      "sender_sms": [],
+      "recipient_sms": [],
+      "sender_locations": [],
+      "recipient_locations": []
+    }
+  },
+  {
+    "fraud_info": {
+      "transaction_id": "53e50501-7ff1-401f-a3e7-189348d46c46",
+      "fraud_scenario": "atm_card_cloned",
+      "expected_signals": [
+        "post_withdrawal",
+        "new_venue",
+        "location_anomaly",
+        "amount_anomaly",
+        "impossible_travel"
+      ],
+      "timestamp": "2028-01-10T22:46:26"
+    },
+    "api_data": {
+      "transaction": {
+        "transaction_id": "53e50501-7ff1-401f-a3e7-189348d46c46",
+        "sender_id": "CHND-CTRN-800-MOD-0",
+        "recipient_id": "",
+        "transaction_type": "in-person payment",
+        "amount": 98.45,
+        "location": "Firenze - Florentine Bistro",
+        "payment_method": "mobile phone",
+        "sender_iban": "IT49V1752823261336080000777",
+        "recipient_iban": "IT72B1462290965672849483576825",
+        "balance_after": 149.14,
+        "description": "",
+        "timestamp": "2028-01-10T22:46:26",
+        "is_fake_recipient": ""
+      },
+      "sender": {
+        "first_name": "Caterina",
+        "last_name": "Chindamo",
+        "birth_year": 2048,
+        "salary": 29700,
+        "job": "Digital Creator",
+        "iban": "IT49V1752823261336080000777",
+        "residence": {
+          "city": "Modena",
+          "lat": "44.6458",
+          "lng": "10.9257"
+        },
+        "biotag": "CHND-CTRN-800-MOD-0",
+        "description": "Caterina Chindamo è una creativa freelance di Modena, nata nel 2048, che si muove tra la concretezza del quotidiano e la curiosità per il mondo digitale. Lavora come Digital Creator, costruendo contenuti per marchi e progetti personali in uno studio ricavato in un appartamento illuminato dal fiume Secchia: immagini, video e microstorie che raccontano dettagli vivi con uno sguardo attento alla forma e alla semplicità. Guadagna intorno ai 29.700 euro l'anno, abbastanza per tenere in piedi la sua indipendenza artistica senza rinunciare a piccoli piaceri, e organizza circa quattro viaggi all'anno, talvolta a poche ore da casa in borghi non troppo affollati, altre volte verso metropoli lontane e dense di stimoli, anche oltre gli oceani. È pratica, ama sperimentare nuove tecniche e collabora con committenti diversi, ma conserva una vena di ingenuità digitale: non sempre riconosce subito le trappole del web e ogni tanto si lascia sorprendere da una mail o un link troppo insistente. Chi la incontra percepisce una persona concreta e curiosa, capace di trasformare una passeggiata in città o una sosta in un caffè in materiale narrativo, con lo sguardo rivolto al presente e alle possibilità che la tecnologia offre alla creatività.",
+        "other_transactions": []
+      },
+      "recipient": null,
+      "sender_emails": [],
+      "recipient_emails": [],
+      "sender_sms": [],
+      "recipient_sms": [],
+      "sender_locations": [],
+      "recipient_locations": []
+    }
+  },
+  {
+    "fraud_info": {
+      "transaction_id": "c29a6232-123d-4216-888e-5f789c9cf2d8",
+      "fraud_scenario": "atm_card_cloned",
+      "expected_signals": [
+        "post_withdrawal",
+        "new_venue",
+        "location_anomaly",
+        "amount_anomaly",
+        "impossible_travel"
+      ],
+      "timestamp": "2028-01-11T19:20:26"
+    },
+    "api_data": {
+      "transaction": {
+        "transaction_id": "c29a6232-123d-4216-888e-5f789c9cf2d8",
+        "sender_id": "CHND-CTRN-800-MOD-0",
+        "recipient_id": "",
+        "transaction_type": "in-person payment",
+        "amount": 103.16,
+        "location": "Firenze - Florence Artisan Bakery",
+        "payment_method": "Google Pay",
+        "sender_iban": "IT49V1752823261336080000777",
+        "recipient_iban": "IT88V6059583551739462261213311",
+        "balance_after": 144.43,
+        "description": "",
+        "timestamp": "2028-01-11T19:20:26",
+        "is_fake_recipient": ""
+      },
+      "sender": {
+        "first_name": "Caterina",
+        "last_name": "Chindamo",
+        "birth_year": 2048,
+        "salary": 29700,
+        "job": "Digital Creator",
+        "iban": "IT49V1752823261336080000777",
+        "residence": {
+          "city": "Modena",
+          "lat": "44.6458",
+          "lng": "10.9257"
+        },
+        "biotag": "CHND-CTRN-800-MOD-0",
+        "description": "Caterina Chindamo è una creativa freelance di Modena, nata nel 2048, che si muove tra la concretezza del quotidiano e la curiosità per il mondo digitale. Lavora come Digital Creator, costruendo contenuti per marchi e progetti personali in uno studio ricavato in un appartamento illuminato dal fiume Secchia: immagini, video e microstorie che raccontano dettagli vivi con uno sguardo attento alla forma e alla semplicità. Guadagna intorno ai 29.700 euro l'anno, abbastanza per tenere in piedi la sua indipendenza artistica senza rinunciare a piccoli piaceri, e organizza circa quattro viaggi all'anno, talvolta a poche ore da casa in borghi non troppo affollati, altre volte verso metropoli lontane e dense di stimoli, anche oltre gli oceani. È pratica, ama sperimentare nuove tecniche e collabora con committenti diversi, ma conserva una vena di ingenuità digitale: non sempre riconosce subito le trappole del web e ogni tanto si lascia sorprendere da una mail o un link troppo insistente. Chi la incontra percepisce una persona concreta e curiosa, capace di trasformare una passeggiata in città o una sosta in un caffè in materiale narrativo, con lo sguardo rivolto al presente e alle possibilità che la tecnologia offre alla creatività.",
+        "other_transactions": []
+      },
+      "recipient": null,
+      "sender_emails": [],
+      "recipient_emails": [],
+      "sender_sms": [],
+      "recipient_sms": [],
+      "sender_locations": [],
+      "recipient_locations": []
+    }
+  }
+]

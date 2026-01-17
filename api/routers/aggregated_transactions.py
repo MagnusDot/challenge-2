@@ -443,10 +443,11 @@ async def get_aggregated_transaction(
             if sender_user_id.lower() in sms.id_user.lower():
                 sender_sms.append(sms)
 
-        # Filtrer par timestamp (3 heures avant la transaction)
-        if transaction.timestamp:
-            sender_emails = filter_emails_by_timestamp(sender_emails, transaction.timestamp, time_window_hours=3)
-            sender_sms = filter_sms_by_timestamp(sender_sms, transaction.timestamp, time_window_hours=3)
+        # Filtre temporel désactivé : on retourne tous les emails/SMS pour permettre la détection de time_correlation
+        # (le filtre de 3h avant excluait des communications pertinentes)
+        # if transaction.timestamp:
+        #     sender_emails = filter_emails_by_timestamp(sender_emails, transaction.timestamp, time_window_hours=3)
+        #     sender_sms = filter_sms_by_timestamp(sender_sms, transaction.timestamp, time_window_hours=3)
         
         # Extraire le texte depuis le HTML pour les emails
         sender_emails = [
@@ -454,7 +455,7 @@ async def get_aggregated_transaction(
             for email in sender_emails
         ]
 
-        logger.debug(f"Found {len(sender_emails)} emails and {len(sender_sms)} SMS for sender (within 3h before transaction)")
+        logger.debug(f"Found {len(sender_emails)} emails and {len(sender_sms)} SMS for sender")
     else:
         logger.warning(f"No sender_user_id found, cannot filter SMS/emails. sender_id: {transaction.sender_id}")
 
@@ -483,10 +484,10 @@ async def get_aggregated_transaction(
             if recipient_user_id.lower() in sms.id_user.lower():
                 recipient_sms.append(sms)
 
-        # Filtrer par timestamp (3 heures avant la transaction)
-        if transaction.timestamp:
-            recipient_emails = filter_emails_by_timestamp(recipient_emails, transaction.timestamp, time_window_hours=3)
-            recipient_sms = filter_sms_by_timestamp(recipient_sms, transaction.timestamp, time_window_hours=3)
+        # Filtre temporel désactivé : on retourne tous les emails/SMS pour permettre la détection de time_correlation
+        # if transaction.timestamp:
+        #     recipient_emails = filter_emails_by_timestamp(recipient_emails, transaction.timestamp, time_window_hours=3)
+        #     recipient_sms = filter_sms_by_timestamp(recipient_sms, transaction.timestamp, time_window_hours=3)
         
         # Extraire le texte depuis le HTML pour les emails
         recipient_emails = [
