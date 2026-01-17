@@ -128,8 +128,8 @@ async def analyze_all_transactions() -> Dict[str, Any]:
     
     print(f"\n{'='*70}")
     print("🤖 ANALYSE AVEC L'AGENT LLM")
-    print(f"{'='*70}")
-    print("📥 Analyse des transactions de fraud.json par batch de 5 avec l'agent...")
+    print(f"{'='*70}") 
+    print("📥 Analyse des transactions de fraud.json en parallèle (asynchrone) avec l'agent...")
     
     agent_state: FraudState = {
         "transaction_ids": [],

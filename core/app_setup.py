@@ -6,7 +6,7 @@ from google.adk.sessions.in_memory_session_service import InMemorySessionService
 
 def setup_app():
 
-    model = os.getenv('MODEL', 'openrouter/openai/gpt-4.1')
+    model = os.getenv('MODEL', 'openrouter/mistralai/ministral-14b-2512')
     print(f"\n🤖 Creating challenge agent with model: {model}")
 
     agent = create_challenge_agent(model=model)

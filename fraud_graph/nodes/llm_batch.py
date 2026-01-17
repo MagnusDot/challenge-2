@@ -22,6 +22,7 @@ from ..state import FraudState
 from core.runner_setup import setup_runner
 from helpers.event_processor import process_event
 from helpers.token_estimator import estimate_tokens
+from fraud_graph.Agent.agent_langgraph import load_system_prompt as load_agent_system_prompt
 
 BATCH_SIZE = 5
 MAX_RETRIES = int(os.getenv('MAX_RETRIES', '3'))
@@ -29,12 +30,8 @@ RETRY_DELAY_BASE = float(os.getenv('RETRY_DELAY_BASE', '2.0'))
 
 
 def load_system_prompt() -> str:
-    prompt_path = Path(__file__).parent.parent.parent / 'Agent' / 'system_prompt.md'
-    if not prompt_path.exists():
-        raise FileNotFoundError(f'System prompt file not found: {prompt_path}')
-    
-    with open(prompt_path, 'r', encoding='utf-8') as f:
-        return f.read()
+    """Charge le prompt système - utilise la même fonction que agent_langgraph pour cohérence."""
+    return load_agent_system_prompt()
 
 
 def analyze_batch_with_agent_sync(
@@ -83,16 +80,23 @@ async def analyze_batch_with_agent_async(
     user_prompt = f"""Analyze {len(transaction_ids)} transactions.
 
 STEP 1: Call get_transaction_aggregated_batch('{transaction_ids_json}') ONCE to get all transaction data.
-STEP 2: Analyze all transactions from the returned data.
+STEP 2: For EACH transaction, systematically use the available tools to gather evidence:
+   - Call check_new_merchant(transaction_id) for each transaction
+   - Call check_time_correlation(transaction_id, time_window_hours) for each transaction
+   - Call check_phishing_indicators(transaction_id, time_window_hours) for each transaction
+   - If transaction is "in-person payment", call check_location_anomaly(transaction_id, use_city_fallback=True)
+   - If location_anomaly detected AND transaction is "in-person payment", call check_withdrawal_pattern(transaction_id, time_window_hours)
 STEP 3: For each transaction you identify as FRAUDULENT, call report_fraud(transaction_id, reasons) with:
    - transaction_id: The UUID of the fraudulent transaction
    - reasons: A comma-separated list of fraud indicators (e.g., "account_drained,time_correlation,new_merchant")
 
 CRITICAL RULES:
+- You MUST use tools to gather evidence - do not make decisions without calling tools
 - Only ONE tool call to get_transaction_aggregated_batch. Use the batch endpoint.
+- Call the specialized tools (check_new_merchant, check_time_correlation, etc.) for EACH transaction
 - Call report_fraud() for EACH fraudulent transaction you find (you can call it multiple times)
 - If no frauds detected, do NOT call report_fraud() at all
-- Do NOT output text - use the report_fraud tool instead"""
+- You MUST call the report_fraud tool - do NOT just mention it in text"""
     
     prompt = f"""{system_prompt}
 

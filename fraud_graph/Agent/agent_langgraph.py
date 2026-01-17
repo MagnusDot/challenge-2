@@ -51,7 +51,7 @@ def load_system_prompt() -> str:
 
 def create_llm():
     """Crée le modèle LLM selon la configuration."""
-    model_name = os.getenv('MODEL', 'openrouter/openai/gpt-4.1')
+    model_name = os.getenv('MODEL', 'openrouter/mistralai/ministral-14b-2512')
     openrouter_key = os.getenv('OPENROUTER_API_KEY')
     
     if not openrouter_key:
