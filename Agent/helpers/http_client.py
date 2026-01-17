@@ -8,7 +8,7 @@ async def make_api_request(
     params: Optional[Dict[str, Any]] = None,
     json_data: Optional[Dict[str, Any]] = None,
     base_url: str = "http://localhost:8000",
-    timeout: float = 30.0,
+    timeout: float = 300.0,
     response_format: str = "toon"
 ) -> Union[Dict[str, Any], str]:
 

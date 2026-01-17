@@ -8,6 +8,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 
 MAX_CONCURRENT_REQUESTS = int(os.getenv('MAX_CONCURRENT_REQUESTS', '5'))
 SAVE_INTERVAL = 5
+BATCH_SIZE = int(os.getenv('BATCH_SIZE', '200'))
 
 DATASET_FOLDER = os.getenv('DATASET_FOLDER', 'public 2')
 DATASET_PATH = PROJECT_ROOT / "dataset" / DATASET_FOLDER / "transactions_dataset.json"

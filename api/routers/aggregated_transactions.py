@@ -1,7 +1,8 @@
 import logging
 from typing import Optional
 from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, HTTPException, Path, Query, Body
+from typing import List
 from api.utils.response_formatter import format_response
 from api.utils.toon_formatter import format_response_as_toon
 
@@ -370,3 +371,200 @@ async def get_aggregated_transaction(
     aggregated_dict = aggregated.model_dump()
 
     return format_response(aggregated_dict, response_format=format.lower())
+
+@router.post("/batch")
+async def get_batch_aggregated_transactions(
+    transaction_ids: List[str] = Body(..., description="List of transaction UUIDs"),
+    format: str = Query("toon", description="Response format: 'json' or 'toon'", alias="format")
+):
+    try:
+        transactions_list = load_transactions()
+        users = load_users()
+        emails = load_emails()
+        sms_list = load_sms()
+        locations = load_locations()
+    except (FileNotFoundError, ValueError) as e:
+        from api.utils.data_loader import get_dataset_folder
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error loading data from dataset '{get_dataset_folder()}': {str(e)}"
+        )
+    
+    if not transaction_ids or len(transaction_ids) == 0:
+        raise HTTPException(status_code=400, detail="transaction_ids list cannot be empty")
+    
+    if len(transaction_ids) > 200:
+        raise HTTPException(status_code=400, detail="Maximum 200 transaction IDs allowed per batch")
+    
+    users_by_iban = {user.iban: user for user in users}
+    users_by_biotag = {user.biotag: user for user in users if user.biotag}
+    
+    batch_results = []
+    
+    for transaction_id in transaction_ids:
+        if not transaction_id or len(transaction_id) != 36:
+            batch_results.append({
+                "transaction_id": transaction_id,
+                "error": "Invalid transaction_id format"
+            })
+            continue
+        
+        transaction = next(
+            (t for t in transactions_list if t.transaction_id == transaction_id),
+            None
+        )
+        
+        if not transaction:
+            batch_results.append({
+                "transaction_id": transaction_id,
+                "error": "Transaction not found"
+            })
+            continue
+        
+        sender = None
+        if transaction.sender_id and transaction.sender_id.strip():
+            sender = users_by_biotag.get(transaction.sender_id)
+        
+        if not sender and transaction.sender_iban and transaction.sender_iban.strip():
+            sender = users_by_iban.get(transaction.sender_iban)
+        
+        recipient = None
+        if transaction.recipient_id and transaction.recipient_id.strip():
+            recipient = users_by_biotag.get(transaction.recipient_id)
+        
+        if not recipient and transaction.recipient_iban and transaction.recipient_iban.strip():
+            recipient = users_by_iban.get(transaction.recipient_iban)
+        
+        sender_emails = []
+        if sender and sender.biotag:
+            for email in emails:
+                email_content = email.mail
+                from_id = None
+                to_id = None
+                lines = email_content.split('\n')
+                for line in lines:
+                    if 'From:' in line:
+                        from_id = _extract_user_id_from_line(line)
+                    elif 'To:' in line:
+                        to_id = _extract_user_id_from_line(line)
+                if (from_id and sender.biotag.lower() in from_id.lower()) or \
+                   (to_id and sender.biotag.lower() in to_id.lower()):
+                    sender_emails.append(email)
+        
+        recipient_emails = []
+        if recipient and recipient.biotag:
+            for email in emails:
+                email_content = email.mail
+                from_id = None
+                to_id = None
+                lines = email_content.split('\n')
+                for line in lines:
+                    if 'From:' in line:
+                        from_id = _extract_user_id_from_line(line)
+                    elif 'To:' in line:
+                        to_id = _extract_user_id_from_line(line)
+                if (from_id and recipient.biotag.lower() in from_id.lower()) or \
+                   (to_id and recipient.biotag.lower() in to_id.lower()):
+                    recipient_emails.append(email)
+        
+        sender_sms = []
+        if sender and sender.biotag:
+            sender_sms = [s for s in sms_list if sender.biotag.lower() in s.id_user.lower()]
+        
+        recipient_sms = []
+        if recipient and recipient.biotag:
+            recipient_sms = [s for s in sms_list if recipient.biotag.lower() in s.id_user.lower()]
+        
+        sender_locations = []
+        if sender and sender.biotag and transaction.timestamp:
+            sender_locations = find_locations_near_timestamp(locations, sender.biotag, transaction.timestamp, 24)
+        
+        recipient_locations = []
+        if recipient and recipient.biotag and transaction.timestamp:
+            recipient_locations = find_locations_near_timestamp(locations, recipient.biotag, transaction.timestamp, 24)
+        
+        sender_other_transactions = []
+        if sender and sender.iban and transaction.timestamp:
+            try:
+                transaction_timestamp = transaction.timestamp.replace('Z', '+00:00')
+                if '+' not in transaction_timestamp and '-' not in transaction_timestamp[-6:]:
+                    if 'T' in transaction_timestamp:
+                        transaction_timestamp = transaction_timestamp + '+00:00'
+                ref_time = datetime.fromisoformat(transaction_timestamp)
+                time_window = timedelta(hours=3)
+                
+                for tx in transactions_list:
+                    if (tx.transaction_id != transaction_id
+                        and (tx.sender_iban == sender.iban or tx.recipient_iban == sender.iban)
+                        and tx.timestamp):
+                        try:
+                            tx_timestamp = tx.timestamp.replace('Z', '+00:00')
+                            if '+' not in tx_timestamp and '-' not in tx_timestamp[-6:]:
+                                if 'T' in tx_timestamp:
+                                    tx_timestamp = tx_timestamp + '+00:00'
+                            tx_time = datetime.fromisoformat(tx_timestamp)
+                            time_diff = abs(tx_time - ref_time)
+                            if time_diff <= time_window:
+                                sender_other_transactions.append(tx)
+                        except (ValueError, AttributeError):
+                            continue
+            except (ValueError, AttributeError):
+                pass
+        
+        recipient_other_transactions = []
+        if recipient and recipient.iban and transaction.timestamp:
+            try:
+                transaction_timestamp = transaction.timestamp.replace('Z', '+00:00')
+                if '+' not in transaction_timestamp and '-' not in transaction_timestamp[-6:]:
+                    if 'T' in transaction_timestamp:
+                        transaction_timestamp = transaction_timestamp + '+00:00'
+                ref_time = datetime.fromisoformat(transaction_timestamp)
+                time_window = timedelta(hours=3)
+                
+                for tx in transactions_list:
+                    if (tx.transaction_id != transaction_id
+                        and (tx.sender_iban == recipient.iban or tx.recipient_iban == recipient.iban)
+                        and tx.timestamp):
+                        try:
+                            tx_timestamp = tx.timestamp.replace('Z', '+00:00')
+                            if '+' not in tx_timestamp and '-' not in tx_timestamp[-6:]:
+                                if 'T' in tx_timestamp:
+                                    tx_timestamp = tx_timestamp + '+00:00'
+                            tx_time = datetime.fromisoformat(tx_timestamp)
+                            time_diff = abs(tx_time - ref_time)
+                            if time_diff <= time_window:
+                                recipient_other_transactions.append(tx)
+                        except (ValueError, AttributeError):
+                            continue
+            except (ValueError, AttributeError):
+                pass
+        
+        sender_with_transactions = None
+        if sender:
+            sender_with_transactions = UserWithTransactions(
+                **sender.model_dump(),
+                other_transactions=sender_other_transactions
+            )
+        
+        recipient_with_transactions = None
+        if recipient:
+            recipient_with_transactions = UserWithTransactions(
+                **recipient.model_dump(),
+                other_transactions=recipient_other_transactions
+            )
+        
+        aggregated = AggregatedTransaction(
+            transaction=transaction,
+            sender=sender_with_transactions,
+            recipient=recipient_with_transactions,
+            sender_emails=sender_emails,
+            recipient_emails=recipient_emails,
+            sender_sms=sender_sms,
+            recipient_sms=recipient_sms,
+            sender_locations=sender_locations,
+            recipient_locations=recipient_locations
+        )
+        
+        batch_results.append(aggregated.model_dump())
+    
+    return format_response(batch_results, response_format=format.lower())

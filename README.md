@@ -46,8 +46,8 @@ The script uses the following environment variables (defined in `.env`):
 - Alternative: `OPENAI_API_KEY` or `GOOGLE_API_KEY` for direct API access
 
 ### Model Configuration
-- `MODEL`: Model to use (default: `openrouter/openai/gpt-4.1`)
-  - OpenRouter format: `openrouter/provider/model` (e.g., `openrouter/openai/gpt-4o`, `openrouter/anthropic/claude-3.5-sonnet`)
+- `MODEL`: Model to use (default: `openrouter/openai/gpt-5-mini`)
+  - OpenRouter format: `openrouter/provider/model` (e.g., `openrouter/openai/gpt-5-mini`, `openrouter/openai/gpt-4o`, `openrouter/anthropic/claude-3.5-sonnet`)
   - Direct OpenAI format: `openai/gpt-4.1`
   - Gemini format: `gemini-2.0-flash-exp`
 
@@ -67,6 +67,9 @@ The script uses the following environment variables (defined in `.env`):
 - `MAX_CONCURRENT_REQUESTS`: Number of concurrent requests
   - Default: `50` for `just run`
   - Default: `5` for `just analyze-all-transactions`
+- `BATCH_SIZE`: Number of transactions to process per batch
+  - Default: `200`
+  - Transactions are analyzed in batches, with automatic save after each batch
 
 ### Caching Configuration
 
@@ -117,7 +120,7 @@ SYSTEM_PROMPT_FILE=system_prompt.md
 ### Example `.env` file
 ```env
 OPENROUTER_API_KEY=sk-or-v1-...
-MODEL=openrouter/openai/gpt-4.1
+MODEL=openrouter/openai/gpt-5-mini
 DATASET_FOLDER=public 4
 SYSTEM_PROMPT_FILE=system_prompt_compact.md
 MAX_CONCURRENT_REQUESTS=50

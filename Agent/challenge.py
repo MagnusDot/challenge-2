@@ -21,7 +21,7 @@ def load_system_prompt() -> str:
     with open(prompt_path, 'r', encoding='utf-8') as f:
         return f.read()
 
-def create_challenge_agent(model: str = "openrouter/openai/gpt-4.1-mini") -> Agent:
+def create_challenge_agent(model: str = "openrouter/openai/gpt-5-mini") -> Agent:
 
     system_prompt = load_system_prompt()
 
@@ -31,8 +31,9 @@ def create_challenge_agent(model: str = "openrouter/openai/gpt-4.1-mini") -> Age
 
     llm_model = LiteLlm(
         model=model,
-        parallel_tool_calls=False,
+        parallel_tool_calls=True,
         response_format={"type": "json_object"},
+        timeout=600,
     )
 
     agent = Agent(

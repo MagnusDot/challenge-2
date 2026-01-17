@@ -6,15 +6,14 @@ from datetime import datetime
 from pathlib import Path
 
 from helpers.config import (
-    PROJECT_ROOT, MAX_CONCURRENT_REQUESTS, SAVE_INTERVAL,
-    DATASET_PATH, DATASET_FOLDER, SYSTEM_PROMPT_PATH
+    PROJECT_ROOT, MAX_CONCURRENT_REQUESTS, SAVE_INTERVAL, BATCH_SIZE,
+    DATASET_PATH, DATASET_FOLDER
 )
-from helpers.prompt_loader import load_analysis_prompt
 from helpers.analysis_state import AnalysisState
 from helpers.statistics import calculate_statistics
 from helpers.display import display_statistics
 from core.runner_setup import setup_runner
-from core.transaction_analyzer import analyze_transaction_with_agent
+from core.batch_analyzer import analyze_batch_with_agent
 
 async def main():
     print("="*70)
@@ -64,15 +63,6 @@ async def main():
         print("❌ Analysis cancelled")
         sys.exit(0)
 
-    print(f"\n📝 Loading analysis prompt template...")
-    print(f"📄 Prompt file: {SYSTEM_PROMPT_PATH}")
-    try:
-        prompt_template = load_analysis_prompt()
-        print(f"✅ Prompt template loaded successfully")
-    except FileNotFoundError:
-        print(f"❌ Error: Prompt template file not found")
-        sys.exit(1)
-
     runner = setup_runner()
 
     print(f"\n{'='*70}")
@@ -93,25 +83,42 @@ async def main():
     print(f"\n⏱️  Analysis started at: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"👤 User ID: {user_id}")
     print(f"🔄 Max concurrent requests: {MAX_CONCURRENT_REQUESTS}")
-    print(f"💾 Results file: {output_file.name} (sauvegarde tous les {SAVE_INTERVAL} résultats)")
-    print(f"💡 Each transaction will create its own session")
+    print(f"📦 Batch size: {BATCH_SIZE} transactions per batch")
+    print(f"💾 Results file: {output_file.name} (sauvegarde après chaque lot)")
+    print(f"💡 Each batch will be analyzed in a single API call")
     print(f"\n{'─'*70}")
 
-    tasks = []
-    for i, transaction in enumerate(transactions, 1):
-        task = analyze_transaction_with_agent(
-            runner, 
-            transaction, 
-            i, 
+    total_batches = (total + BATCH_SIZE - 1) // BATCH_SIZE
+    
+    for batch_num in range(total_batches):
+        batch_start = batch_num * BATCH_SIZE
+        batch_end = min(batch_start + BATCH_SIZE, total)
+        batch_transactions = transactions[batch_start:batch_end]
+        
+        print(f"\n{'='*70}")
+        print(f"📦 BATCH {batch_num + 1}/{total_batches}")
+        print(f"   Transactions {batch_start + 1}-{batch_end} sur {total}")
+        print(f"{'='*70}")
+        
+        print(f"🚀 Analyse de {len(batch_transactions)} transactions en un seul appel...")
+        results = await analyze_batch_with_agent(
+            runner,
+            batch_transactions,
+            batch_num,
+            batch_start,
             state,
-            prompt_template,
             semaphore,
             user_id=user_id
         )
-        tasks.append(task)
-
-    print(f"🚀 Lancement de {len(tasks)} analyses en parallèle...")
-    await asyncio.gather(*tasks, return_exceptions=True)
+        
+        state.save_results()
+        completed = len(state.get_results())
+        print(f"\n✅ Lot {batch_num + 1}/{total_batches} terminé: {completed}/{total} transactions analysées")
+        print(f"💾 Résultats sauvegardés")
+        
+        if batch_num < total_batches - 1:
+            print(f"⏸️  Pause avant le prochain lot...")
+            await asyncio.sleep(1)
 
     print(f"\n{'─'*70}")
 
