@@ -66,6 +66,20 @@ ITALIAN_CITY_DISTANCES = {
     ("Napoli", "Palermo"): 420,
     ("Firenze", "Bologna"): 100,
     ("Firenze", "Genova"): 270,
+    ("Modena", "Genova"): 150,
+    ("Modena", "Bologna"): 40,
+    ("Modena", "Milano"): 180,
+    ("Modena", "Firenze"): 100,
+    ("Sant'Agata di Militello", "Roma"): 700,
+    ("Sant'Agata di Militello", "Milano"): 1100,
+    ("Sant'Agata di Militello", "Napoli"): 500,
+    ("Sant'Agata di Militello", "Palermo"): 150,
+    ("Sant'Agata di Militello", "Catania"): 100,
+    ("Sant'Agata di Militello", "Bari"): 400,
+    ("Sant'Agata di Militello", "Genova"): 1000,
+    ("Sant'Agata di Militello", "Bologna"): 900,
+    ("Sant'Agata di Militello", "Firenze"): 850,
+    ("Sant'Agata di Militello", "Modena"): 900,
 }
 
 
@@ -324,37 +338,54 @@ async def check_location_anomaly(request: LocationAnomalyRequest):
             }
         
         tx_location = transaction.location or ""
-        tx_lat = transaction.lat
-        tx_lng = transaction.lng
         user_residence = sender.residence
         
-        # Méthode 1: GPS si disponible
-        if tx_lat and tx_lng and user_residence.lat and user_residence.lng:
-            try:
-                distance_km = calculate_gps_distance(
-                    float(user_residence.lat),
-                    float(user_residence.lng),
-                    float(tx_lat),
-                    float(tx_lng)
-                )
-                
-                has_anomaly = distance_km > 100  # Plus de 100km de la résidence
-                
-                return {
-                    "transaction_id": request.transaction_id,
-                    "has_location_anomaly": has_anomaly,
-                    "method": "gps",
-                    "distance_km": round(distance_km, 2),
-                    "transaction_location": tx_location,
-                    "residence_city": user_residence.city,
-                    "threshold_km": 100
-                }
-            except:
-                pass
+        # Chercher les coordonnées GPS dans les locations associées à la transaction
+        tx_lat = None
+        tx_lng = None
         
-        # Méthode 2: Ville si GPS non disponible et use_city_fallback = True
-        if request.use_city_fallback and tx_location:
+        # Chercher dans les locations du sender autour de la date de la transaction
+        if transaction.sender_id and transaction.timestamp:
+            sender_locations = [
+                loc for loc in locations 
+                if loc.biotag == transaction.sender_id
+            ]
+            
+            # Filtrer par timestamp si disponible
+            if transaction.timestamp:
+                from datetime import datetime, timedelta
+                try:
+                    tx_time = datetime.fromisoformat(transaction.timestamp.replace('Z', '+00:00'))
+                    time_window = timedelta(hours=24)
+                    
+                    for loc in sender_locations:
+                        if loc.timestamp:
+                            try:
+                                loc_time = datetime.fromisoformat(loc.timestamp.replace('Z', '+00:00'))
+                                if abs((loc_time - tx_time).total_seconds()) <= time_window.total_seconds():
+                                    if hasattr(loc, 'lat') and hasattr(loc, 'lng'):
+                                        tx_lat = getattr(loc, 'lat', None)
+                                        tx_lng = getattr(loc, 'lng', None)
+                                        if tx_lat and tx_lng:
+                                            break
+                            except:
+                                continue
+                except:
+                    # Si pas de timestamp valide, prendre la première location avec GPS
+                    for loc in sender_locations:
+                        if hasattr(loc, 'lat') and hasattr(loc, 'lng'):
+                            tx_lat = getattr(loc, 'lat', None)
+                            tx_lng = getattr(loc, 'lng', None)
+                            if tx_lat and tx_lng:
+                                break
+        
+        # Extraire la ville de la transaction
+        tx_city = None
+        if tx_location:
             tx_city = tx_location.split(" - ")[0].strip()
+        
+        # Si use_city_fallback=True, utiliser la méthode "city" en priorité (plus fiable)
+        if request.use_city_fallback and tx_city:
             residence_city = user_residence.city or ""
             
             if tx_city and residence_city and tx_city != residence_city:
@@ -380,6 +411,30 @@ async def check_location_anomaly(request: LocationAnomalyRequest):
                     "user_has_been_there": tx_city in seen_cities,
                     "seen_cities": list(seen_cities)
                 }
+        
+        # Méthode GPS si use_city_fallback=False et GPS disponible
+        if not request.use_city_fallback and tx_lat and tx_lng and user_residence and user_residence.lat and user_residence.lng:
+            try:
+                distance_km = calculate_gps_distance(
+                    float(user_residence.lat),
+                    float(user_residence.lng),
+                    float(tx_lat),
+                    float(tx_lng)
+                )
+                
+                has_anomaly = distance_km > 100  # Plus de 100km de la résidence
+                
+                return {
+                    "transaction_id": request.transaction_id,
+                    "has_location_anomaly": has_anomaly,
+                    "method": "gps",
+                    "distance_km": round(distance_km, 2),
+                    "transaction_location": tx_location,
+                    "residence_city": user_residence.city,
+                    "threshold_km": 100
+                }
+            except:
+                pass
         
         return {
             "transaction_id": request.transaction_id,

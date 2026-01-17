@@ -2,24 +2,27 @@ import os
 import sys
 import logging
 from pathlib import Path
-from google.adk.runners import Runner
-from google.adk.sessions.in_memory_session_service import InMemorySessionService
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from fraud_graph.Agent.agent import create_fraud_agent
-from fraud_graph.utils.output_filter import setup_output_filter
+from fraud_graph.Agent import create_fraud_agent, LangGraphRunner
 
-setup_output_filter()
-
-logging.getLogger("LiteLLM").setLevel(logging.ERROR)
+logging.getLogger("LiteLLM").setLevel(logging.CRITICAL)
+logging.getLogger("litellm").setLevel(logging.CRITICAL)
 logging.getLogger("httpx").setLevel(logging.ERROR)
 logging.getLogger("httpcore").setLevel(logging.ERROR)
 
+# Désactiver complètement le logging worker de LiteLLM pour éviter les warnings
 os.environ.setdefault("LITELLM_LOG", "ERROR")
 os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "")
+os.environ.setdefault("LITELLM_TURN_OFF_MESSAGE_LOGGING", "true")
+os.environ.setdefault("LITELLM_TURN_OFF_LOGGING", "false")  # Garder les erreurs critiques
 
 def setup_runner():
-
+    """Crée un runner LangGraph pour l'agent de détection de fraude.
+    
+    Returns:
+        LangGraphRunner: Runner compatible avec l'interface existante
+    """
     # Modèle par défaut : GPT 4.1
     # Alternatives:
     # - openrouter/openai/gpt-4.1 (par défaut)
@@ -33,15 +36,10 @@ def setup_runner():
         print("   📦 LiteLLM caching enabled (set LITELLM_CACHE=true)")
 
     agent = create_fraud_agent()
-    print(f"✅ Agent '{agent.name}' initialized with batch tool!")
+    print(f"✅ Agent LangGraph initialized!")
 
-    print(f"🔧 Creating Runner with session management...")
-    session_service = InMemorySessionService()
-    runner = Runner(
-        app_name="transaction_fraud_analysis",
-        agent=agent,
-        session_service=session_service,
-    )
+    print(f"🔧 Creating LangGraph Runner...")
+    runner = LangGraphRunner(agent)
     print(f"✅ Runner configured!")
 
     return runner

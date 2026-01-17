@@ -207,6 +207,13 @@ lang-single TRANSACTION_ID:
     PYTHONPATH=. .venv/bin/python fraud_graph/main.py {{TRANSACTION_ID}}
     @echo "✅ Analysis complete!"
 
+# Run agent LangGraph on a single transaction ID
+agent TRANSACTION_ID:
+    @echo "🤖 Running LangGraph agent on transaction {{TRANSACTION_ID}}..."
+    @echo "⚠️  Make sure API is running (just api-dev)"
+    PYTHONPATH=. .venv/bin/python fraud_graph/run_agent.py {{TRANSACTION_ID}}
+    @echo "✅ Agent analysis complete!"
+
 # Run LangGraph with API check
 lang-safe: check-env
     @echo "🚀 Starting LangGraph fraud detection..."

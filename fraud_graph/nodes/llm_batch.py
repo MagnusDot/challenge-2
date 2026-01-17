@@ -2,6 +2,7 @@ import json
 import asyncio
 import os
 import sys
+import logging
 from pathlib import Path
 from typing import List, Dict, Any
 from datetime import datetime
@@ -9,6 +10,13 @@ from google.adk.runners import Runner
 from google.genai import types
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+# Réduire le bruit de LiteLLM
+logging.getLogger("LiteLLM").setLevel(logging.CRITICAL)
+logging.getLogger("litellm").setLevel(logging.CRITICAL)
+os.environ.setdefault("LITELLM_TURN_OFF_MESSAGE_LOGGING", "true")
+
+logger = logging.getLogger(__name__)
 
 from ..state import FraudState
 from core.runner_setup import setup_runner
@@ -29,12 +37,38 @@ def load_system_prompt() -> str:
         return f.read()
 
 
+def analyze_batch_with_agent_sync(
+    runner: Runner,
+    transaction_ids: List[str],
+    batch_num: int,
+    user_id: str = 'fraud_analyst'
+) -> Dict[str, Any]:
+    """Synchronous wrapper for analyze_batch_with_agent_async.
+    
+    This function uses asyncio.run() to execute the async function,
+    but all tools are now synchronous, so Google ADK Agent can execute them properly.
+    """
+    try:
+        return asyncio.run(analyze_batch_with_agent_async(runner, transaction_ids, batch_num, user_id))
+    except Exception as e:
+        logger.error(
+            f"❌ ERREUR dans analyze_batch_with_agent_sync (batch {batch_num}): {type(e).__name__}: {str(e)}",
+            exc_info=True
+        )
+        raise
+
+
 async def analyze_batch_with_agent_async(
     runner: Runner,
     transaction_ids: List[str],
     batch_num: int,
     user_id: str = 'fraud_analyst'
 ) -> Dict[str, Any]:
+    """Analyze a batch of transactions with the agent.
+    
+    Note: This function is async because runner.run_async() is async,
+    but all tools are synchronous, so Google ADK Agent can execute them properly.
+    """
     batch_start_time = datetime.now()
     
     session = runner.session_service.create_session(
@@ -81,6 +115,8 @@ CRITICAL RULES:
     }
     
     try:
+        logger.info(f"🔄 Démarrage analyse batch {batch_num} avec {len(transaction_ids)} transactions")
+        
         async for event in runner.run_async(
             user_id=user_id,
             session_id=session.id,
@@ -90,6 +126,8 @@ CRITICAL RULES:
             
             if 'ToolCall' in event_type or 'tool_call' in event_type.lower():
                 tool_name = getattr(event, 'function_name', getattr(event, 'name', getattr(event, 'function', None)))
+                logger.debug(f"🔧 Tool call détecté: {tool_name} (batch {batch_num})")
+                
                 if tool_name == 'report_fraud':
                     args = {}
                     if hasattr(event, 'args'):
@@ -119,10 +157,27 @@ CRITICAL RULES:
                         transaction_id = args.get('transaction_id', '')
                         reasons_str = args.get('reasons', '')
                         if transaction_id:
+                            logger.info(f"🚨 Fraude détectée (batch {batch_num}): {transaction_id} - {reasons_str}")
                             fraud_reports.append({
                                 'transaction_id': transaction_id,
                                 'reasons': reasons_str
                             })
+                        else:
+                            logger.warning(f"⚠️ report_fraud appelé sans transaction_id valide (batch {batch_num})")
+            
+            # Détecter les erreurs spécifiques de Google ADK
+            if 'Error' in event_type or 'error' in event_type.lower():
+                error_msg = getattr(event, 'message', getattr(event, 'error', str(event)))
+                logger.error(f"❌ Erreur Google ADK (batch {batch_num}): {error_msg}")
+            
+            # Détecter les erreurs "No tool output found"
+            if hasattr(event, 'message') and 'No tool output found' in str(event.message):
+                logger.error(
+                    f"❌ ERREUR CRITIQUE: No tool output found (batch {batch_num})\n"
+                    f"   Transaction IDs: {transaction_ids}\n"
+                    f"   Session ID: {session.id}\n"
+                    f"   Event: {event}"
+                )
             
             response_text, token_usage, tool_calls_count = process_event(
                 event, response_text, token_usage, tool_calls_count, batch_num
@@ -164,6 +219,11 @@ CRITICAL RULES:
         batch_end_time = datetime.now()
         batch_duration = (batch_end_time - batch_start_time).total_seconds()
         
+        logger.info(
+            f"✅ Batch {batch_num} terminé: {len(frauds_detected)} fraudes détectées "
+            f"en {batch_duration:.2f}s ({tool_calls_count} tool calls)"
+        )
+        
         return {
             'batch_num': batch_num,
             'transaction_ids': transaction_ids,
@@ -177,11 +237,39 @@ CRITICAL RULES:
         batch_end_time = datetime.now()
         batch_duration = (batch_end_time - batch_start_time).total_seconds()
         
+        error_type = type(e).__name__
+        error_msg = str(e)
+        
+        logger.error(
+            f"❌ ERREUR dans analyze_batch_with_agent_async (batch {batch_num}):\n"
+            f"   Type: {error_type}\n"
+            f"   Message: {error_msg}\n"
+            f"   Transaction IDs: {transaction_ids}\n"
+            f"   Session ID: {session.id if 'session' in locals() else 'N/A'}\n"
+            f"   Durée: {batch_duration:.2f}s\n"
+            f"   Tool calls: {tool_calls_count}",
+            exc_info=True
+        )
+        
+        # Détecter les erreurs spécifiques
+        if 'No tool output found' in error_msg:
+            logger.error(
+                f"🔴 ERREUR CRITIQUE: No tool output found pour batch {batch_num}\n"
+                f"   Cela signifie que Google ADK Agent n'a pas pu exécuter les outils.\n"
+                f"   Vérifiez que les outils sont bien synchrones et que l'API est accessible."
+            )
+        elif 'BadRequestError' in error_type or 'OpenrouterException' in error_msg:
+            logger.error(
+                f"🔴 ERREUR API: Problème avec OpenRouter/LLM pour batch {batch_num}\n"
+                f"   Vérifiez OPENROUTER_API_KEY et la connexion réseau."
+            )
+        
         return {
             'batch_num': batch_num,
             'transaction_ids': transaction_ids,
             'frauds_detected': [],
-            'error': str(e),
+            'error': error_msg,
+            'error_type': error_type,
             'token_usage': token_usage,
             'duration': batch_duration
         }

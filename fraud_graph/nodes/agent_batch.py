@@ -2,6 +2,7 @@ import json
 import asyncio
 import os
 import sys
+import logging
 from pathlib import Path
 from typing import List, Dict, Any
 from datetime import datetime
@@ -9,9 +10,16 @@ from google.adk.runners import Runner
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+# Configurer le logging pour réduire le bruit de LiteLLM
+logging.getLogger("LiteLLM").setLevel(logging.CRITICAL)
+logging.getLogger("litellm").setLevel(logging.CRITICAL)
+os.environ.setdefault("LITELLM_TURN_OFF_MESSAGE_LOGGING", "true")
+
+logger = logging.getLogger(__name__)
+
 from ..state import FraudState
 from core.runner_setup import setup_runner
-from .llm_batch import analyze_batch_with_agent_async
+from .llm_batch import analyze_batch_with_agent_sync
 from .save_real_fraud import save_fraud_to_real_fraud_json
 
 BATCH_SIZE = 5
@@ -59,12 +67,20 @@ async def analyze_frauds_with_agent(state: FraudState) -> FraudState:
         batch_end = min(batch_start + BATCH_SIZE, len(transaction_ids))
         batch_ids = transaction_ids[batch_start:batch_end]
         
-        task = analyze_batch_with_agent_async(
-            runner,
-            batch_ids,
-            batch_num,
-            user_id
-        )
+        # Use sync version - tools are now synchronous, so Google ADK Agent can execute them properly
+        # Wrap in async function to run in thread pool
+        async def run_batch_sync(bn, bid):
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(
+                None,
+                analyze_batch_with_agent_sync,
+                runner,
+                bid,
+                bn,
+                user_id
+            )
+        
+        task = run_batch_sync(batch_num, batch_ids)
         batch_tasks.append(task)
     
     print(f'🚀 Lancement de {total_batches} batches en parallèle...')
@@ -117,6 +133,29 @@ async def analyze_frauds_with_agent(state: FraudState) -> FraudState:
     
     status_task = asyncio.create_task(print_status_summary())
     
+    # Liste pour stocker les erreurs en temps réel
+    error_list = []
+    error_lock = asyncio.Lock()
+    
+    async def add_error(batch_num: int, error_type: str, error_msg: str, transaction_ids: List[str] = None):
+        """Ajouter une erreur à la liste et l'afficher immédiatement."""
+        async with error_lock:
+            error_entry = {
+                'batch_num': batch_num + 1,
+                'error_type': error_type,
+                'error': error_msg[:200],
+                'transaction_ids': transaction_ids or []
+            }
+            error_list.append(error_entry)
+            
+            # Afficher l'erreur immédiatement
+            print(f'\n❌ ERREUR Batch {batch_num + 1}/{total_batches}: {error_type}')
+            print(f'   Message: {error_msg[:300]}')
+            if transaction_ids:
+                print(f'   Transactions: {", ".join([tid[:8] + "..." for tid in transaction_ids[:3]])}')
+                if len(transaction_ids) > 3:
+                    print(f'   ... et {len(transaction_ids) - 3} autres')
+    
     async def process_batch_with_save(batch_num: int, task) -> Dict[str, Any]:
         nonlocal completed_batches
         try:
@@ -124,12 +163,41 @@ async def analyze_frauds_with_agent(state: FraudState) -> FraudState:
             result = await task
             
             if isinstance(result, Exception):
-                await update_status(batch_num, 'error', error=str(result)[:100])
+                error_msg = str(result)
+                error_type = type(result).__name__
+                await update_status(batch_num, 'error', error=error_msg[:100])
                 async with status_lock:
                     completed_batches += 1
-                print(f'\n❌ Batch {batch_num + 1}/{total_batches}: {type(result).__name__}: {str(result)[:200]}')
-                return {'error': str(result), 'batch_num': batch_num + 1}
+                
+                await add_error(batch_num, error_type, error_msg)
+                
+                logger.error(
+                    f"❌ Batch {batch_num + 1}/{total_batches} - Exception: {error_type}\n"
+                    f"   Message: {error_msg[:500]}",
+                    exc_info=result if hasattr(result, '__traceback__') else None
+                )
+                return {'error': error_msg, 'error_type': error_type, 'batch_num': batch_num + 1}
             else:
+                # Vérifier si le résultat contient une erreur
+                if isinstance(result, dict) and 'error' in result:
+                    error_msg = result.get('error', 'Unknown error')
+                    error_type = result.get('error_type', 'Unknown')
+                    transaction_ids = result.get('transaction_ids', [])
+                    
+                    await update_status(batch_num, 'error', error=error_msg[:100])
+                    async with status_lock:
+                        completed_batches += 1
+                    
+                    await add_error(batch_num, error_type, error_msg, transaction_ids)
+                    
+                    logger.error(
+                        f"❌ Batch {batch_num + 1}/{total_batches} - Erreur dans le résultat:\n"
+                        f"   Type: {error_type}\n"
+                        f"   Message: {error_msg[:500]}\n"
+                        f"   Transaction IDs: {transaction_ids}"
+                    )
+                    return result
+                
                 frauds = result.get('frauds_detected', [])
                 if frauds:
                     await save_fraud_to_real_fraud_json(frauds)
@@ -137,14 +205,26 @@ async def analyze_frauds_with_agent(state: FraudState) -> FraudState:
                 await update_status(batch_num, 'completed', frauds=len(frauds))
                 async with status_lock:
                     completed_batches += 1
+                
+                logger.info(f"✅ Batch {batch_num + 1}/{total_batches}: {len(frauds)} fraudes détectées")
                 print(f'\n✅ Batch {batch_num + 1}/{total_batches}: {len(frauds)} fraudes détectées')
                 return result
         except Exception as e:
-            await update_status(batch_num, 'error', error=str(e)[:100])
+            error_msg = str(e)
+            error_type = type(e).__name__
+            await update_status(batch_num, 'error', error=error_msg[:100])
             async with status_lock:
                 completed_batches += 1
-            print(f'\n❌ Erreur dans le batch {batch_num + 1}: {type(e).__name__}: {str(e)[:200]}')
-            return {'error': str(e), 'batch_num': batch_num + 1}
+            
+            await add_error(batch_num, error_type, error_msg)
+            
+            logger.error(
+                f"❌ Erreur dans process_batch_with_save (batch {batch_num + 1}):\n"
+                f"   Type: {error_type}\n"
+                f"   Message: {error_msg[:500]}",
+                exc_info=True
+            )
+            return {'error': error_msg, 'error_type': error_type, 'batch_num': batch_num + 1}
     
     batch_results = await asyncio.gather(
         *[process_batch_with_save(batch_num, task) for batch_num, task in enumerate(batch_tasks)],
@@ -162,10 +242,18 @@ async def analyze_frauds_with_agent(state: FraudState) -> FraudState:
     all_frauds = []
     total_tokens = {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}
     
+    # Les erreurs ont déjà été affichées pendant le traitement via error_list
+    # On les récupère juste pour le résumé final
+    async with error_lock:
+        error_summary = error_list.copy()
+    
     for result in batch_results:
         if isinstance(result, Exception):
+            # Cette erreur devrait déjà être dans error_list
+            logger.error(f"Exception dans batch_results: {type(result).__name__}: {str(result)[:500]}", exc_info=result)
             continue
         elif isinstance(result, dict) and 'error' in result:
+            # Cette erreur devrait déjà être dans error_list et affichée
             continue
         else:
             frauds = result.get('frauds_detected', [])
@@ -174,6 +262,28 @@ async def analyze_frauds_with_agent(state: FraudState) -> FraudState:
             total_tokens['prompt_tokens'] += tokens.get('prompt_tokens', 0)
             total_tokens['completion_tokens'] += tokens.get('completion_tokens', 0)
             total_tokens['total_tokens'] += tokens.get('total_tokens', 0)
+    
+    # Afficher un résumé final des erreurs (déjà affichées pendant le traitement)
+    if error_summary:
+        print(f'\n📊 RÉSUMÉ FINAL: {len(error_summary)} batches en erreur sur {total_batches}')
+        if len(error_summary) <= 5:
+            # Si peu d'erreurs, les réafficher toutes
+            for err in error_summary:
+                print(f"   ❌ Batch {err['batch_num']}: {err['error_type']} - {err['error'][:150]}")
+        else:
+            # Si beaucoup d'erreurs, juste le résumé
+            error_types = {}
+            for err in error_summary:
+                error_type = err['error_type']
+                error_types[error_type] = error_types.get(error_type, 0) + 1
+            print(f"   Types d'erreurs:")
+            for err_type, count in error_types.items():
+                print(f"      - {err_type}: {count} batch(es)")
+        
+        logger.warning(
+            f"⚠️  {len(error_summary)} batches en erreur sur {total_batches}:\n" +
+            "\n".join([f"   Batch {e['batch_num']}: {e['error_type']} - {e['error'][:200]}" for e in error_summary])
+        )
     
     output_file = Path('fraud_graph/results/agent_analysis.json')
     output_file.parent.mkdir(parents=True, exist_ok=True)
