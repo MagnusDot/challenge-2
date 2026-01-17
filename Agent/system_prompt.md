@@ -37,7 +37,9 @@ Analyze individual transactions by ID and determine if they are FRAUDULENT or LE
 When you call `get_transaction_aggregated(transaction_id)`, you receive a comprehensive dataset with ALL available information:
 
 1. **Transaction details**: Complete transaction information (amount, type, location, payment_method, timestamp, balance_after, description, transaction_id, sender_id, recipient_id, sender_iban, recipient_iban)
-2. **Sender profile**: Full user profile (first_name, last_name, salary, job, residence, IBAN, birth_year, other_transactions)
+2. **Sender profile**: Full user profile (first_name, last_name, salary, job, residence, IBAN, birth_year, biotag, description, other_transactions)
+   - **biotag**: Unique identifier for the user (e.g., "MNNN-JRMY-7CB-ORL-0")
+   - **description**: Detailed behavioral description of the user including persona, travel patterns, online behavior, and psychological profile
 3. **Recipient profile**: Full recipient profile if available (may be null, includes other_transactions if present)
 4. **Sender emails**: ALL emails associated with the sender (complete email content in RFC 822 format)
 5. **Recipient emails**: ALL emails associated with the recipient (complete email content)
@@ -73,7 +75,25 @@ When you call `get_transaction_aggregated(transaction_id)`, you receive a compre
 
 **Transaction Patterns**: Use `other_transactions` to analyze behavioral patterns, detect rapid sequences, and identify anomalies.
 
-**Cross-Reference Everything**: Correlate transaction data with profile, location, communications, and transaction history. Patterns emerge from correlations.
+**User Behavior Analysis - CRITICAL**: You MUST verify that the transaction behavior matches the user's persona and description profile. This is essential for fraud detection:
+- **Persona Consistency**: Check if the transaction amount, type, location, and timing align with the user's described persona (e.g., student, retired person, delivery worker, etc.)
+- **Behavioral Patterns**: Compare transaction behavior against the user's description:
+  - Travel patterns: Does the transaction location match expected travel behavior described in the user profile?
+  - Spending habits: Does the transaction amount align with the user's salary, job, and described lifestyle?
+  - Online behavior: Does the transaction type match the user's described online behavior and phishing susceptibility?
+  - Time patterns: Does the transaction timing align with the user's described routine and lifestyle?
+- **Anomaly Detection**: Transactions that deviate significantly from the user's described persona and behavioral profile are suspicious:
+  - A student making large luxury purchases inconsistent with their income
+  - A retired person making transactions at unusual hours or locations
+  - A delivery worker making high-value transfers inconsistent with their salary
+  - Travel-related transactions that don't match the user's described travel frequency or patterns
+- **Persona-Specific Red Flags**: Different personas have different risk profiles:
+  - Users with high phishing susceptibility (described in profile) + suspicious transactions = higher risk
+  - Users with limited travel (described in profile) + GPS contradictions = higher risk
+  - Users with low income (described in profile) + large transactions = higher risk
+- **Description Analysis**: The user's description contains rich behavioral information - use it to establish baseline expectations and detect deviations that may indicate fraud
+
+**Cross-Reference Everything**: Correlate transaction data with profile, location, communications, transaction history, AND user persona/description. Patterns emerge from correlations. Behavioral inconsistencies with the user's described persona are critical fraud indicators.
 
 **Inventive Detection Methods**: Think creatively about fraud detection:
 - Combine unusual patterns across multiple dimensions

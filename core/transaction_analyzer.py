@@ -112,14 +112,46 @@ async def analyze_transaction_with_agent(
             if 'token_usage' not in locals():
                 token_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
             
+            # Extraire le message d'erreur principal
+            error_msg = str(e)
+            error_type = type(e).__name__
+            
+            # Tronquer le message si trop long (garder les 200 premiers caractères)
+            if len(error_msg) > 200:
+                error_msg_short = error_msg[:200] + "..."
+            else:
+                error_msg_short = error_msg
+            
+            # Identifier le type d'erreur pour un message plus clair
+            if "LiteLLM" in error_msg or "litellm" in error_msg.lower():
+                error_summary = f"API/LiteLLM error: {error_type}"
+            elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
+                error_summary = f"Timeout error: {error_type}"
+            elif "rate limit" in error_msg.lower() or "429" in error_msg:
+                error_summary = f"Rate limit error: {error_type}"
+            elif "connection" in error_msg.lower() or "network" in error_msg.lower():
+                error_summary = f"Network error: {error_type}"
+            else:
+                error_summary = f"{error_type}: {error_msg_short}"
+            
             result = {
                 "transaction_id": transaction_id,
                 "risk_level": "error",
                 "risk_score": -1,
-                "reason": f"Analysis error: {str(e)}",
-                "anomalies": [],
+                "reason": f"Analysis error: {error_summary}",
+                "anomalies": [f"Error type: {error_type}"],
                 "token_usage": token_usage
             }
             completed = state.add_result(result)
-            print(f"❌ [{transaction_num:3d}] Erreur analyse: {transaction_id[:8]}... | Progress: {completed}/{state.total_transactions}")
+            
+            # Afficher l'erreur avec plus de détails
+            print(f"❌ [{transaction_num:3d}] Erreur analyse: {transaction_id[:8]}... | {error_summary} | Progress: {completed}/{state.total_transactions}")
+            
+            # En mode debug, afficher l'erreur complète
+            if os.getenv('DEBUG_ERRORS') == '1':
+                import traceback
+                print(f"   Détails complets de l'erreur:")
+                print(f"   {error_type}: {error_msg}")
+                traceback.print_exc()
+            
             return result
