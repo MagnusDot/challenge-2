@@ -300,7 +300,7 @@ CRITICAL: Only ONE tool call to get_transaction_aggregated. Use the batch endpoi
             print(f"   📏 Réponse length: {len(response_text):,} caractères", flush=True)
             print(f"   📈 Tokens/transaction: {token_usage['total_tokens'] // len(transactions):,}", flush=True)
             
-            # Parser le format texte : uuid | [reasons] | score/100
+            # Parser le format texte : uuid | [reasons]
             frauds_detected = []
             if response_text:
                 for line in response_text.split('\n'):
@@ -310,18 +310,9 @@ CRITICAL: Only ONE tool call to get_transaction_aggregated. Use the batch endpoi
                     
                     # Séparer par pipe, en gérant les espaces
                     parts = [p.strip() for p in line.split('|')]
-                    if len(parts) >= 3:
+                    if len(parts) >= 2:
                         transaction_id = parts[0].strip()
                         reasons_str = parts[1].strip()
-                        score_str = parts[2].strip()
-                        
-                        # Extraire le score (format: XX/100)
-                        score = 0
-                        if '/' in score_str:
-                            try:
-                                score = int(score_str.split('/')[0].strip())
-                            except (ValueError, AttributeError):
-                                pass
                         
                         # Extraire les raisons (format: [reason1, reason2, ...])
                         reasons = []
@@ -331,14 +322,14 @@ CRITICAL: Only ONE tool call to get_transaction_aggregated. Use the batch endpoi
                             if reasons_str:
                                 reasons = [r.strip() for r in reasons_str.split(',') if r.strip()]
                         
-                        # Ne garder que les fraudes high/critical (score >= 61)
-                        if score >= 61 and transaction_id:
+                        # Si on a un transaction_id et des raisons, c'est une fraude détectée
+                        if transaction_id and reasons:
                             frauds_detected.append({
                                 "transaction_id": transaction_id,
-                                "risk_level": "critical" if score >= 86 else "high",
-                                "risk_score": score,
-                                "reason": "; ".join(reasons) if reasons else f"Fraud detected (score: {score})",
-                                "anomalies": reasons if reasons else [f"Risk score: {score}"]
+                                "risk_level": "critical",
+                                "risk_score": 100,  # Par défaut, toutes les fraudes détectées sont critical
+                                "reason": "; ".join(reasons) if reasons else "Fraud detected",
+                                "anomalies": reasons if reasons else ["Fraud detected"]
                             })
             
             print(f"   🔍 Fraudes détectées (high/critical): {len(frauds_detected)}/{len(transactions)}", flush=True)

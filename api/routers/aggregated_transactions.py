@@ -243,12 +243,14 @@ def filter_emails_by_timestamp(
                     email_timestamp = email_timestamp.replace(tzinfo=timezone.utc)
                 
                 # Ne garder que les emails dans les N heures AVANT la transaction
+                # (entre l'heure de la transaction et 3h avant)
                 time_diff = ref_time - email_timestamp
                 if timedelta(0) <= time_diff <= time_window:
                     filtered_emails.append(email)
             else:
-                # Si on ne peut pas extraire le timestamp, ne pas inclure l'email
-                logger.debug(f"Could not extract timestamp from email, skipping")
+                # Si on ne peut pas extraire le timestamp, inclure quand même l'email
+                logger.debug(f"Could not extract timestamp from email, including anyway")
+                filtered_emails.append(email)
         
         logger.debug(f"Filtered {len(filtered_emails)}/{len(emails)} emails within {time_window_hours}h before transaction")
         return filtered_emails
@@ -290,12 +292,14 @@ def filter_sms_by_timestamp(
                     sms_timestamp = sms_timestamp.replace(tzinfo=timezone.utc)
                 
                 # Ne garder que les SMS dans les N heures AVANT la transaction
+                # (entre l'heure de la transaction et 3h avant)
                 time_diff = ref_time - sms_timestamp
                 if timedelta(0) <= time_diff <= time_window:
                     filtered_sms.append(sms)
             else:
-                # Si on ne peut pas extraire le timestamp, ne pas inclure le SMS
-                logger.debug(f"Could not extract timestamp from SMS, skipping")
+                # Si on ne peut pas extraire le timestamp, inclure quand même le SMS
+                logger.debug(f"Could not extract timestamp from SMS, including anyway")
+                filtered_sms.append(sms)
         
         logger.debug(f"Filtered {len(filtered_sms)}/{len(sms_list)} SMS within {time_window_hours}h before transaction")
         return filtered_sms
