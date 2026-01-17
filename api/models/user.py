@@ -33,6 +33,8 @@ class User(BaseModel):
     job: str = Field(..., description="Job title", min_length=1, max_length=200)
     iban: str = Field(..., description="IBAN code", min_length=15, max_length=34)
     residence: UserResidence = Field(..., description="Residence information")
+    biotag: Optional[str] = Field(default=None, description="User biotag identifier (e.g., MNNN-JRMY-7CB-ORL-0)")
+    description: Optional[str] = Field(default=None, description="User description text")
     
     @field_validator('iban')
     @classmethod
@@ -58,7 +60,9 @@ class User(BaseModel):
                     "city": "Paris",
                     "lat": "48.8566",
                     "lng": "2.3522"
-                }
+                },
+                "biotag": "MNNN-JRMY-7CB-ORL-0",
+                "description": "User description text..."
             }
         }
 

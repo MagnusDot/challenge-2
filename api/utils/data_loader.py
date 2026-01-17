@@ -12,7 +12,7 @@ from api.models import User, Transaction, Location, SMS, Email
 # ============================================================================
 # CONFIGURATION - Modify this path to switch datasets
 # ============================================================================
-_DATASET_FOLDER = "public 2"  # Change to "public 1", "public 2", etc.
+_DATASET_FOLDER = "public 1"  # Change to "public 1", "public 2", etc.
 # ============================================================================
 
 # Get the project root (2 levels up from this file)
@@ -72,8 +72,44 @@ def set_dataset_folder(folder_name: str) -> None:
 
 @lru_cache(maxsize=1)
 def load_users() -> List[User]:
-    """Load users from JSON file with caching."""
-    file_path = get_dataset_dir() / "users.json"
+    """Load users from JSON file with caching.
+    
+    Tries to load from users_descriptions.json first (which contains biotags),
+    falls back to users.json if not available.
+    """
+    dataset_dir = get_dataset_dir()
+    
+    # Try to load from users_descriptions.json first (contains biotags)
+    descriptions_path = dataset_dir / "users_descriptions.json"
+    if descriptions_path.exists():
+        with open(descriptions_path, 'r', encoding='utf-8') as f:
+            descriptions_data = json.load(f)
+        
+        users = []
+        for item in descriptions_data:
+            # Extract person_data, biotag, and description
+            person_data = item.get("person_data", {})
+            biotag = person_data.get("_biotag")
+            description = item.get("description")
+            
+            # Create user from person_data (which has the same structure as users.json)
+            user_dict = {
+                "first_name": person_data.get("first_name"),
+                "last_name": person_data.get("last_name"),
+                "birth_year": person_data.get("birth_year"),
+                "salary": person_data.get("salary"),
+                "job": person_data.get("job"),
+                "iban": person_data.get("iban"),
+                "residence": person_data.get("residence"),
+                "biotag": biotag,
+                "description": description
+            }
+            users.append(User(**user_dict))
+        
+        return users
+    
+    # Fallback to users.json if users_descriptions.json doesn't exist
+    file_path = dataset_dir / "users.json"
     with open(file_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
     return [User(**item) for item in data]
@@ -99,14 +135,24 @@ def load_locations() -> List[Location]:
 
 @lru_cache(maxsize=1)
 def load_sms() -> List[SMS]:
-    """Load SMS messages from JSON file with caching."""
-    # Find the most recent SMS file
-    dataset_dir = get_dataset_dir()
-    sms_files = list(dataset_dir.glob("generated_sms_*.json"))
-    if not sms_files:
-        return []
+    """Load SMS messages from JSON file with caching.
     
-    latest_file = max(sms_files, key=lambda p: p.stat().st_mtime)
+    Tries to find files matching generated_sms_*.json pattern first,
+    falls back to generated_sms.json if no timestamped files exist.
+    """
+    dataset_dir = get_dataset_dir()
+    
+    # Try to find timestamped files first
+    sms_files = list(dataset_dir.glob("generated_sms_*.json"))
+    
+    if sms_files:
+        # Use the most recent timestamped file
+        latest_file = max(sms_files, key=lambda p: p.stat().st_mtime)
+    else:
+        # Fallback to generated_sms.json (without timestamp)
+        latest_file = dataset_dir / "generated_sms.json"
+        if not latest_file.exists():
+            return []
     
     with open(latest_file, 'r', encoding='utf-8') as f:
         data = json.load(f)
@@ -115,14 +161,24 @@ def load_sms() -> List[SMS]:
 
 @lru_cache(maxsize=1)
 def load_emails() -> List[Email]:
-    """Load emails from JSON file with caching."""
-    # Find the most recent email file
-    dataset_dir = get_dataset_dir()
-    email_files = list(dataset_dir.glob("generated_mails_*.json"))
-    if not email_files:
-        return []
+    """Load emails from JSON file with caching.
     
-    latest_file = max(email_files, key=lambda p: p.stat().st_mtime)
+    Tries to find files matching generated_mails_*.json pattern first,
+    falls back to generated_mails.json if no timestamped files exist.
+    """
+    dataset_dir = get_dataset_dir()
+    
+    # Try to find timestamped files first
+    email_files = list(dataset_dir.glob("generated_mails_*.json"))
+    
+    if email_files:
+        # Use the most recent timestamped file
+        latest_file = max(email_files, key=lambda p: p.stat().st_mtime)
+    else:
+        # Fallback to generated_mails.json (without timestamp)
+        latest_file = dataset_dir / "generated_mails.json"
+        if not latest_file.exists():
+            return []
     
     with open(latest_file, 'r', encoding='utf-8') as f:
         data = json.load(f)

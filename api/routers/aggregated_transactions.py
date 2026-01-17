@@ -158,59 +158,46 @@ async def get_aggregated_transaction(
             detail=f"Transaction {transaction_id} non trouvée"
         )
     
-    # Créer un dictionnaire IBAN -> User pour recherche rapide
+    # Créer des dictionnaires pour recherche rapide
     users_by_iban = {user.iban: user for user in users}
+    # Créer un mapping biotag -> User (plus direct et fiable)
+    users_by_biotag = {user.biotag: user for user in users if user.biotag}
     
-    # Créer aussi un mapping sender_id/recipient_id -> User en utilisant les transactions où IBAN correspond
-    # Cela permet de trouver le user même si l'IBAN de cette transaction ne correspond pas
-    sender_id_to_user = {}
-    recipient_id_to_user = {}
-    
-    for tx in transactions:
-        # Mapping pour sender
-        if tx.sender_iban and tx.sender_iban.strip() and tx.sender_id and tx.sender_id.strip():
-            user = users_by_iban.get(tx.sender_iban)
-            if user:
-                sender_id_to_user[tx.sender_id] = user
-        
-        # Mapping pour recipient
-        if tx.recipient_iban and tx.recipient_iban.strip() and tx.recipient_id and tx.recipient_id.strip():
-            user = users_by_iban.get(tx.recipient_iban)
-            if user:
-                recipient_id_to_user[tx.recipient_id] = user
-    
-    logger.debug(f"Created sender_id mapping with {len(sender_id_to_user)} entries")
-    logger.debug(f"Created recipient_id mapping with {len(recipient_id_to_user)} entries")
+    logger.debug(f"Created users_by_iban mapping with {len(users_by_iban)} entries")
+    logger.debug(f"Created users_by_biotag mapping with {len(users_by_biotag)} entries")
     
     # Trouver l'expéditeur
-    # D'abord par IBAN (si l'IBAN n'est pas vide)
+    # D'abord par biotag (sender_id correspond au biotag dans les transactions)
     sender = None
-    if transaction.sender_iban and transaction.sender_iban.strip():
+    if transaction.sender_id and transaction.sender_id.strip():
+        sender = users_by_biotag.get(transaction.sender_id)
+        if sender:
+            logger.debug(f"Found sender by biotag (sender_id): {transaction.sender_id}")
+    
+    # Si pas trouvé par biotag, essayer par IBAN (fallback)
+    if not sender and transaction.sender_iban and transaction.sender_iban.strip():
         sender = users_by_iban.get(transaction.sender_iban)
         if sender:
             logger.debug(f"Found sender by IBAN: {transaction.sender_iban}")
     
-    # Si pas trouvé par IBAN, essayer par sender_id (fallback)
-    if not sender and transaction.sender_id and transaction.sender_id.strip():
-        sender = sender_id_to_user.get(transaction.sender_id)
-        if sender:
-            logger.debug(f"Found sender by sender_id: {transaction.sender_id}")
-        else:
-            logger.warning(f"Could not find sender for sender_id: {transaction.sender_id}, mapping has {len(sender_id_to_user)} entries")
+    if not sender and transaction.sender_id:
+        logger.warning(f"Could not find sender for sender_id/biotag: {transaction.sender_id}")
     
     # Même logique pour le recipient
     recipient = None
-    if transaction.recipient_iban and transaction.recipient_iban.strip():
+    if transaction.recipient_id and transaction.recipient_id.strip():
+        recipient = users_by_biotag.get(transaction.recipient_id)
+        if recipient:
+            logger.debug(f"Found recipient by biotag (recipient_id): {transaction.recipient_id}")
+    
+    # Si pas trouvé par biotag, essayer par IBAN (fallback)
+    if not recipient and transaction.recipient_iban and transaction.recipient_iban.strip():
         recipient = users_by_iban.get(transaction.recipient_iban)
         if recipient:
             logger.debug(f"Found recipient by IBAN: {transaction.recipient_iban}")
     
-    if not recipient and transaction.recipient_id and transaction.recipient_id.strip():
-        recipient = recipient_id_to_user.get(transaction.recipient_id)
-        if recipient:
-            logger.debug(f"Found recipient by recipient_id: {transaction.recipient_id}")
-        else:
-            logger.debug(f"Could not find recipient for recipient_id: {transaction.recipient_id}")
+    if not recipient and transaction.recipient_id:
+        logger.debug(f"Could not find recipient for recipient_id/biotag: {transaction.recipient_id}")
     
     # Créer des ID utilisateur pour filtrer emails et SMS
     # Format: Prénom_Nom (utilisé dans les fichiers SMS/emails)
@@ -219,26 +206,15 @@ async def get_aggregated_transaction(
             return f"{user.first_name}_{user.last_name}"
         return None
     
-    # Pour le sender: utiliser le format Prénom_Nom si on a trouvé le user, sinon essayer de trouver via le mapping
+    # Pour le sender: utiliser le format Prénom_Nom si on a trouvé le user
     sender_user_id = None
     if sender:
         sender_user_id = get_user_id(sender)
-    elif transaction.sender_id:
-        # Si on n'a pas trouvé le sender mais qu'on a un sender_id, chercher dans le mapping
-        mapped_sender = sender_id_to_user.get(transaction.sender_id)
-        if mapped_sender:
-            sender_user_id = get_user_id(mapped_sender)
-            sender = mapped_sender  # Mettre à jour sender pour les locations
     
     # Pour le recipient: même logique
     recipient_user_id = None
     if recipient:
         recipient_user_id = get_user_id(recipient)
-    elif transaction.recipient_id and transaction.recipient_id.strip():
-        mapped_recipient = recipient_id_to_user.get(transaction.recipient_id)
-        if mapped_recipient:
-            recipient_user_id = get_user_id(mapped_recipient)
-            recipient = mapped_recipient  # Mettre à jour recipient pour les locations
     
     logger.debug(f"Sender user_id for filtering: {sender_user_id}, sender found: {sender is not None}")
     logger.debug(f"Recipient user_id for filtering: {recipient_user_id}, recipient found: {recipient is not None}")
