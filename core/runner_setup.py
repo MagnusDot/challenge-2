@@ -23,12 +23,12 @@ def setup_runner():
     Returns:
         LangGraphRunner: Runner compatible avec l'interface existante
     """
-    # Modèle par défaut : Ministral 14B (économique)
+    # Modèle par défaut : GPT-4.1 (performant)
     # Alternatives:
-    # - openrouter/mistralai/ministral-14b-2512 (par défaut, économique)
-    # - openrouter/openai/gpt-4.1 (plus performant mais plus cher)
+    # - openrouter/openai/gpt-4.1 (par défaut, performant)
+    # - openrouter/mistralai/ministral-14b-2512 (économique)
     # - openrouter/openai/gpt-4-turbo (rapide)
-    model = os.getenv('MODEL', 'openrouter/mistralai/ministral-14b-2512')
+    model = os.getenv('MODEL', 'openrouter/openai/gpt-4.1')
     print(f"\n🤖 Creating fraud agent with model: {model}")
 
     use_cache = os.getenv('LITELLM_CACHE', 'false').lower() == 'true'

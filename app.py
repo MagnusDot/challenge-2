@@ -170,7 +170,7 @@ async def retry_failed_transactions(
     runner = setup_runner()
     
     # Obtenir le modèle utilisé pour calculer la taille de batch appropriée
-    model = os.getenv('MODEL', 'openrouter/mistralai/ministral-14b-2512')
+    model = os.getenv('MODEL', 'openrouter/openai/gpt-4.1')
     batch_size = get_batch_size(model)
     
     print(f"\n{'='*70}")
@@ -357,7 +357,7 @@ async def main():
     runner = setup_runner()
     
     # Obtenir le modèle utilisé pour calculer la taille de batch appropriée
-    model = os.getenv('MODEL', 'openrouter/mistralai/ministral-14b-2512')
+    model = os.getenv('MODEL', 'openrouter/openai/gpt-4.1')
     batch_size = get_batch_size(model)
 
     print(f"\n{'='*70}")

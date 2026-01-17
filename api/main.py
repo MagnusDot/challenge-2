@@ -91,6 +91,44 @@ async def get_current_dataset():
         ] if (PROJECT_ROOT / "dataset").exists() else []
     }
 
+@app.post("/dataset/reload")
+async def reload_data():
+    """Recharge toutes les données depuis les fichiers (vide le cache)."""
+    from api.utils.data_loader import clear_cache, load_transactions, load_users, load_locations, load_sms, load_emails
+    
+    try:
+        # Vider le cache
+        clear_cache()
+        
+        # Recharger les données pour vérifier
+        transactions = load_transactions()
+        users = load_users()
+        locations = load_locations()
+        sms_messages = load_sms()
+        emails = load_emails()
+        
+        return {
+            "status": "success",
+            "message": "Données rechargées avec succès",
+            "cache_cleared": True,
+            "data_loaded": {
+                "transactions": len(transactions),
+                "users": len(users),
+                "locations": len(locations),
+                "sms_messages": len(sms_messages),
+                "emails": len(emails),
+                "dataset": get_dataset_folder()
+            }
+        }
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error reloading data: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error reloading data: {str(e)}"
+        )
+
 @app.post("/dataset/{folder_name}")
 async def switch_dataset(
     folder_name: str = Path(

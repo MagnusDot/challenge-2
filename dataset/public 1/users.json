@@ -1,72 +1,72 @@
 [
   {
-    "first_name": "Caterina",
-    "last_name": "Chindamo",
-    "birth_year": 2048,
-    "salary": 29700,
-    "job": "Digital Creator",
-    "iban": "IT49V1752823261336080000777",
-    "residence": {
-      "city": "Modena",
-      "lat": "44.6458",
-      "lng": "10.9257"
-    },
-    "description": "Caterina Chindamo è una creativa freelance di Modena, nata nel 2048, che si muove tra la concretezza del quotidiano e la curiosità per il mondo digitale. Lavora come Digital Creator, costruendo contenuti per marchi e progetti personali in uno studio ricavato in un appartamento illuminato dal fiume Secchia: immagini, video e microstorie che raccontano dettagli vivi con uno sguardo attento alla forma e alla semplicità. Guadagna intorno ai 29.700 euro l'anno, abbastanza per tenere in piedi la sua indipendenza artistica senza rinunciare a piccoli piaceri, e organizza circa quattro viaggi all'anno, talvolta a poche ore da casa in borghi non troppo affollati, altre volte verso metropoli lontane e dense di stimoli, anche oltre gli oceani. È pratica, ama sperimentare nuove tecniche e collabora con committenti diversi, ma conserva una vena di ingenuità digitale: non sempre riconosce subito le trappole del web e ogni tanto si lascia sorprendere da una mail o un link troppo insistente. Chi la incontra percepisce una persona concreta e curiosa, capace di trasformare una passeggiata in città o una sosta in un caffè in materiale narrativo, con lo sguardo rivolto al presente e alle possibilità che la tecnologia offre alla creatività."
-  },
-  {
-    "first_name": "Eva",
-    "last_name": "Abbagnale",
+    "first_name": "Lucy",
+    "last_name": "Gomes",
     "birth_year": 2052,
-    "salary": 21000,
-    "job": "Ride-share Driver",
-    "iban": "IT73N3214992890018160197857",
+    "salary": 34300,
+    "job": "Freelance Designer",
+    "iban": "FR55N0200823268964325154148",
     "residence": {
-      "city": "Bari",
-      "lat": "41.1253",
-      "lng": "16.8667"
+      "city": "Paris",
+      "lat": "48.8567",
+      "lng": "2.3522"
     },
-    "description": "Eva Abbagnale vive a Bari, con le strade dell’antico borgo e il mare Adriatico a pochi passi. Lavora come autista per una piattaforma di ride‑sharing: le sue giornate sono fatte di turni flessibili, corse brevi tra il centro storico e la stazione, e qualche servizio all’aeroporto quando il traffico lo richiede. Con una retribuzione annua intorno ai 21.000 euro affronta la città con pragmatismo, tenga d’occhio le spese e cura ogni euro guadagnato per mantenere un piccolo appartamento e pagare i conti.\n\nIl lavoro le ha insegnato a leggere le persone in pochi minuti: ascolta storie di chi sale a bordo, impara preferenze e scorci della città, e sa adattarsi ai ritmi diversi di studenti, turisti e lavoratori. Pur essendo radicata a Bari, si concede un solo viaggio vero all’anno: a volte una fuga in un borgo di poche migliaia di abitanti, altre volte una trasferta in una grande metropoli dall’altra parte del mondo; raramente rimane nell’abituale raggio quotidiano, ma quando lo fa non bada a distanze — può arrivare fino a migliaia di chilometri.\n\nSui dispositivi è pratica ma non sospettosamente prudente: a volte clicca link o offerte che sembrano utili, e ha imparato a suo prezzo a distinguere l’affidabile dall’inganno. Non ama parlare di soldi o di conti in pubblico, preferisce lasciare certi dettagli per sé. Nel quotidiano Eva è uno sguardo attento sulla città: un equilibrio di fatica e cura, abitudini consolidate e la disponibilità a partire, almeno una volta l’anno, per vedere qualcosa di diverso."
+    "description": "Née au début des années 90, Lucy Gomes est une designer freelance installée à Paris: créative et débrouillarde, elle gagne environ 34 300 € par an et travaille tantôt depuis des cafés du Marais, tantôt dans des espaces de coworking, acceptant des missions locales et internationales; elle voyage environ trois fois par an — parfois pour des sauts rapides vers des petites villes d'à peine mille habitants, parfois pour des déplacements lointains jusqu'à 15 000 km vers de grandes métropoles — et, pressée par les délais et curieuse, elle accorde parfois trop vite sa confiance aux courriels inconnus, un point de vigilance pour sa sécurité numérique."
   },
   {
-    "first_name": "Steven",
-    "last_name": "Walters",
-    "birth_year": 2012,
-    "salary": 23500,
-    "job": "Retired",
-    "iban": "US62H6436382020998742706697",
+    "first_name": "Chelsey",
+    "last_name": "Young",
+    "birth_year": 2048,
+    "salary": 30800,
+    "job": "Administrative Assistant",
+    "iban": "US73D4280177960108839550498",
     "residence": {
-      "city": "Balch Springs",
-      "lat": "32.7194",
-      "lng": "-96.6151"
+      "city": "Rye",
+      "lat": "41.0075",
+      "lng": "-73.6872"
     },
-    "description": "Steven Walters vive a Balch Springs, una cittadina alla periferia di Dallas dove le giornate scorrono lente ma piene di piccole cose familiari. È un pensionato che si è ritirato dalla vita lavorativa e ha trasformato la casa in un centro di attività quotidiane: cura le piante sul terrazzo, sistema la cucina con la meticolosità di chi ha sempre avuto a cuore l’ordine domestico e dedica parte del pomeriggio a piccoli lavoretti che tengono viva la routine. La sua pensione è modesta, ma sufficiente per affrontare le spese e concedersi un viaggio all’anno, spesso per vedere posti nuovi o visitare parenti lontani: talvolta una breve gita nello stato, altre volte un volo più lungo che porta a città molto diverse dalla sua.\n\nSilenzioso ma socievole, Steven conosce i vicini per nome e apprezza la tranquillità del quartiere; la sua vita sociale si costruisce intorno a incontri al mercato, chiacchierate al bar e qualche attività comunitaria per anziani. Non è molto avvezzo alle insidie del mondo digitale: usa internet e la posta elettronica per restare in contatto, ma non raramente si trova confuso davanti a messaggi sospetti e tende a fidarsi finché non impara a dubitare. Gestisce le faccende pratiche con prudenza e, pur senza grandi avventure quotidiane, sceglie con cura come spendere il tempo e il denaro, preservando la serenità che cerca nella sua routine a Balch Springs."
+    "description": "Chelsey Young is an Administrative Assistant in Rye, New York, a steady, practical presence who keeps schedules, files and small office crises under control; she earns about $30,800 a year and favors a modest life by the Sound, starting mornings with a short walk before heading to the office, she’s friendly and reliable with coworkers—sometimes a bit too trusting of emails—and takes one meaningful trip a year, usually to a mid‑sized or major city rather than a remote village."
   },
   {
-    "first_name": "Ubaldo",
-    "last_name": "Zaccagnini",
-    "birth_year": 2046,
-    "salary": 35500,
-    "job": "Office Clerk",
-    "iban": "IT04D3311385372808229066992",
+    "first_name": "Lucio",
+    "last_name": "Majewski",
+    "birth_year": 2032,
+    "salary": 262100,
+    "job": "Investor",
+    "iban": "IT20M2916720511293244237558",
     "residence": {
-      "city": "Sant'Agata di Militello",
-      "lat": "38.0680",
-      "lng": "14.6333"
+      "city": "Luino",
+      "lat": "46.0000",
+      "lng": "8.7500"
     },
-    "description": "Ubaldo Zaccagnini è un impiegato d'ufficio che vive a Sant'Agata di Militello, dove la routine quotidiana trova ritmo tra il lungomare e gli uffici comunali. Nato nel 2046, ha costruito una vita ordinata e solida: lavora con precisione, cura pratiche e registri e porta a casa ogni mese lo stipendio che gli permette una sicurezza pratica — circa 35.500 euro l'anno. Le sue giornate sono fatte di scartoffie, telefonate e scambi con colleghi e cittadini; sa districarsi tra procedure e scadenze ma non pretende mai di correre troppo, preferendo la concretezza al clamore.\n\nViaggia due volte l'anno: a volte si tratta di piccoli spostamenti in paesi e borghi vicini, altre volte di mete lontane, perfino dall'altra parte del mondo, perché ama alternare la calma del suo paese a esperienze più vivaci e affollate. Non è un fan della tecnologia avanzata e, sebbene usi email e strumenti digitali per lavoro, tende a fidarsi eccessivamente di messaggi e richieste che dovrebbero invece suscitare sospetto: una natura di persona aperta che lo rende talvolta vulnerabile alle truffe online. A Sant'Agata mantiene uno stile di vita semplice ma dignitoso; non cerca il protagonismo, preferisce essere quel riferimento affidabile che conoscono in città e che torna a casa ogni sera con la sensazione di aver fatto il proprio dovere."
+    "description": "Lucio Majewski vive a Luino, sulle rive del Lago Maggiore: investitore di successo con un reddito annuo intorno ai 262.100 euro, alterna le decisioni d'affari tra i tavolini del centro e le sale riunioni di città più grandi, puntando su startup tecnologiche e immobiliari; viaggia circa due volte l'anno, a volte per brevi fughe in borghi di qualche migliaio di abitanti, altre per trasferte più lunghe — anche fino a 15.000 km — che lo portano nelle grandi metropoli, e proprio questo equilibrio tra la tranquillità del lungolago e i ritmi frenetici dei viaggi lo tiene concreto e curioso: lavora con metodo, ascolta i fondatori, e torna sempre a Luino come base per ricaricare e pianificare il prossimo investimento."
   },
   {
-    "first_name": "Julian",
-    "last_name": "Bolton",
-    "birth_year": 2003,
-    "salary": 41800,
-    "job": "Retired",
-    "iban": "GB73G1063770029654120323935",
+    "first_name": "Gianni",
+    "last_name": "Camanni",
+    "birth_year": 2041,
+    "salary": 101700,
+    "job": "Senior Consultant",
+    "iban": "IT30C0444947593039753334327",
     "residence": {
-      "city": "Bolsover",
-      "lat": "53.2304",
-      "lng": "-1.2875"
+      "city": "Rome",
+      "lat": "41.8931",
+      "lng": "12.4828"
     },
-    "description": "Julian Bolton vive a Bolsover, nell’Inghilterra centrale, e ha fatto della cura della casa il ritmo delle sue giornate. Nato nel 2003, ha scelto presto di vivere da pensionato casalingo: organizza i pasti, tiene in ordine l’alloggio e si dedica a piccoli lavori domestici che lo tengono occupato e soddisfatto. Le sue mattine sono fatte di routine semplici — una passeggiata nel quartiere, qualche commissione al mercato locale, il tè con un vicino — mentre i pomeriggi passano tra letture, la gestione delle pratiche quotidiane e quella cura meticolosa degli spazi che per lui è una forma di serenità.\n\nNon disdegna però la novità: viaggia due volte l’anno, alternando brevi fughe in borghi vicini a volte a trasferte ben più lunghe, che possono portarlo fino a migliaia di chilometri di distanza. Ama sia i centri piccoli e raccolti sia le città più affollate e cosmopolite; preferisce programmare con calma, scegliendo mete che gli offrano un equilibrio tra tranquillità e stimolo. Il suo tenore di vita riflette una situazione economica stabile, con risorse che gli permettono di mantenere questa routine domestica e concedersi qualche viaggio all’anno. Nel complesso Julian è una presenza pacata e affidabile nel suo quartiere, capace di trovare soddisfazione nelle cose semplici senza rinunciare alla curiosità per il mondo."
+    "description": "Gianni Camanni è un Senior Consultant che vive a Roma; nato nel 2041, guadagna circa €101.700 all'anno e organizza la sua vita professionale attorno a clienti e progetti, con trasferte di lavoro in media due volte l'anno che possono spingerlo fino a 15.000 km, da paesi di poche migliaia di abitanti fino a metropoli di decine di milioni, dove coordina team, stringe accordi e tiene presentazioni; in città conserva gesti tipicamente romani — un caffè veloce prima dell'ufficio, riunioni nel centro e una certa calma nel districarsi nel traffico cittadino — ma sa muoversi con la precisione del manager moderno, facendo convivere agenda digitale e valigia sempre pronta."
+  },
+  {
+    "first_name": "Laurent",
+    "last_name": "Sanchez",
+    "birth_year": 2047,
+    "salary": 81000,
+    "job": "Restaurant Owner",
+    "iban": "FR94Q2054182299944978044396",
+    "residence": {
+      "city": "Le Cannet",
+      "lat": "43.5769",
+      "lng": "7.0194"
+    },
+    "description": "Laurent Sanchez est un entrepreneur attentif et pragmatique qui tient un restaurant à Le Cannet, où il est aussi connu pour ses petits-déjeuners matinaux et sa capacité à résoudre les imprévus du service; avec un revenu annuel d'environ 81 000 €, il a su investir dans une cuisine solide et des fournisseurs de la région, partant quatre fois par an en voyages qui peuvent être de courts déplacements autour de la Méditerranée ou des lointains qui l'emmènent jusqu'à 15 000 km, à la recherche d'inspirations venues de villages de 1 000 habitants comme de grandes métropoles; il connaît son quartier, papote avec les clients installés en terrasse et passe ses soirées à peaufiner la carte, tout en restant connecté aux offres et aux sollicitations en ligne — il a une tendance à cliquer facilement sur les propositions numériques, ce qui le rend à la fois ouvert aux nouveautés et parfois surpris par les pièges du web."
   }
 ]

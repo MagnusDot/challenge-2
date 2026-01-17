@@ -132,7 +132,23 @@ def load_locations() -> List[Location]:
     file_path = get_dataset_dir() / "locations.json"
     with open(file_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
-    return [Location(**item) for item in data]
+    
+    # Normaliser les données : mapper 'timestamp' vers 'datetime' si nécessaire
+    # Filtrer les locations sans datetime/timestamp valide
+    normalized_data = []
+    for item in data:
+        normalized_item = item.copy()
+        # Si 'timestamp' existe mais pas 'datetime', mapper timestamp -> datetime
+        if 'timestamp' in normalized_item and 'datetime' not in normalized_item:
+            normalized_item['datetime'] = normalized_item.pop('timestamp')
+        
+        # Ignorer les locations sans datetime (champ requis par le modèle)
+        if 'datetime' not in normalized_item:
+            continue
+            
+        normalized_data.append(normalized_item)
+    
+    return [Location(**item) for item in normalized_data]
 
 @lru_cache(maxsize=1)
 def load_sms() -> List[SMS]:

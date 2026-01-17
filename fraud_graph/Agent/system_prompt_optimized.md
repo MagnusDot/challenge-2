@@ -17,9 +17,11 @@ Analyze transactions and determine if they are FRAUDULENT or LEGITIMATE. Use too
    - **ALWAYS** call `check_new_merchant(transaction_id)` to check if merchant is new
    - **ALWAYS** call `check_time_correlation(transaction_id, time_window_hours)` to check for phishing correlation
    - **ALWAYS** call `check_phishing_indicators(transaction_id, time_window_hours)` to check for phishing
+   - **CRITICAL**: If transaction type is "prelievo" or "withdrawal", **ALWAYS** call:
+     - `check_withdrawal_pattern(transaction_id, time_window_hours)` to check for multiple withdrawals pattern
+     - `check_location_anomaly(transaction_id, use_city_fallback=True)` to check if withdrawals are in different cities
    - If transaction is "in-person payment", **ALWAYS** call `check_location_anomaly(transaction_id, use_city_fallback=True)`
    - **IMPORTANT**: If location_anomaly is detected AND transaction is "in-person payment", ALWAYS call `check_withdrawal_pattern(transaction_id, time_window_hours)` to check for post-withdrawal pattern
-   - If transaction is "prelievo" or "withdrawal", call `check_withdrawal_pattern(transaction_id, time_window_hours)` to check for multiple withdrawals
 3. **Decide**: Only report fraud if multiple tools confirm it
 4. **Report**: Call `report_fraud(transaction_id, "reason1,reason2,reason3")` - you MUST call the tool, not just mention it
 
@@ -32,12 +34,15 @@ Analyze transactions and determine if they are FRAUDULENT or LEGITIMATE. Use too
 - Time correlation (`check_time_correlation`)
 
 ### Pattern 2: BEC Urgent Invoice
+**REQUIRED**: Check balance_after - if it is exactly €0.00, this is a STRONG indicator of account draining.
+
+- Balance = €0.00 (exactly, not €100 or €500) - **STRONGEST INDICATOR**
 - New destination OR recipient used in previous fraud (`check_new_merchant`)
 - Amount anomaly (>50% of monthly salary)
 - Time correlation (`check_time_correlation`)
 - Phishing indicators with invoice/urgent/payment keywords (`check_phishing_indicators`)
 
-**Note**: If amount_anomaly + time_correlation + phishing indicators are present, this is fraud even if the destination was seen before (fraudsters may reuse the same IBAN).
+**CRITICAL**: If balance = €0.00 + amount_anomaly + time_correlation + phishing indicators, this IS fraud even if the destination was seen before (fraudsters may reuse the same IBAN). Balance = €0.00 is the strongest indicator - do not miss it!
 
 ### Pattern 3: Phishing (Parcel Customs)
 - New merchant (`check_new_merchant`)
@@ -45,9 +50,13 @@ Analyze transactions and determine if they are FRAUDULENT or LEGITIMATE. Use too
 - Phishing indicators (`check_phishing_indicators`)
 
 ### Pattern 3: Identity Verification
-- Multiple withdrawals (`check_withdrawal_pattern`)
-- Location anomaly (`check_location_anomaly`)
-- Different city from residence
+**REQUIRED**: For transactions of type "prelievo" or "withdrawal", ALWAYS call both `check_withdrawal_pattern` AND `check_location_anomaly`.
+
+- Multiple withdrawals (`check_withdrawal_pattern`) - at least 2 withdrawals within 1-2 hours
+- Location anomaly (`check_location_anomaly`) - withdrawals in different city from residence
+- Time correlation (`check_time_correlation`) - withdrawals occur after suspicious identity verification emails/SMS (optional but strengthens the case)
+
+**CRITICAL**: If you detect multiple withdrawals (pattern_multiple_withdrawals = true) + location_anomaly (withdrawals in different city from residence), this IS fraud even if balance is not €0.00. You MUST call both tools for "prelievo" or "withdrawal" transactions.
 
 ### Pattern 4: Card Cloning (ATM Card Cloned)
 **REQUIRED**: For "in-person payment" transactions with location_anomaly, ALWAYS call `check_withdrawal_pattern` to check for post-withdrawal pattern.
@@ -70,18 +79,23 @@ Analyze transactions and determine if they are FRAUDULENT or LEGITIMATE. Use too
 
 ## What is NOT Fraud
 
-- New merchant without time_correlation
-- Large amounts without time_correlation and new destination
-- Location anomaly alone (without post-withdrawal pattern or other indicators)
+- New merchant without time_correlation AND phishing indicators
+- Large amounts without time_correlation AND new destination AND phishing indicators
+- Location anomaly alone (without post-withdrawal pattern OR multiple withdrawals pattern)
 - Multiple transactions (normal shopping)
 - Single indicator alone (always need multiple indicators)
+- Post-withdrawal pattern alone (without location_anomaly + new_venue for card cloning)
+- Phishing indicators + time_correlation alone (without amount_anomaly OR new_dest for BEC)
+- Amount anomaly + time_correlation alone (without phishing indicators for BEC)
 
 ## When to Call check_withdrawal_pattern
 
 **ALWAYS call `check_withdrawal_pattern` when:**
-- Transaction type is "in-person payment" AND location_anomaly is detected
-- Transaction type is "prelievo" or "withdrawal" (to check for multiple withdrawals pattern)
+- **CRITICAL**: Transaction type is "prelievo" or "withdrawal" - you MUST call this to check for multiple withdrawals pattern (identity_verification fraud)
+- Transaction type is "in-person payment" AND location_anomaly is detected (to check for post-withdrawal pattern)
 - You suspect card cloning (atm_card_cloned pattern)
+
+**For "prelievo" or "withdrawal" transactions, you MUST also call `check_location_anomaly` to check if withdrawals are in different cities from residence.**
 
 ## Output
 

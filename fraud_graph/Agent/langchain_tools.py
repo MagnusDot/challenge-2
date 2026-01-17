@@ -76,14 +76,33 @@ def _make_api_request_sync(
         logger.debug(f"   Request body: {json.dumps(json_data, indent=2, ensure_ascii=False)[:500]}")
     
     try:
+        # Désactiver allow_redirects pour éviter les redirections POST -> GET qui causent des 404
         response = requests.request(
             method=method,
             url=url,
             params=params,
             json=json_data,
             timeout=timeout,
-            allow_redirects=True
+            allow_redirects=False
         )
+        
+        # Gérer les redirections manuellement si nécessaire (code 3xx)
+        if response.status_code in (301, 302, 303, 307, 308):
+            logger.warning(f"⚠️ Redirection détectée ({response.status_code}) pour {endpoint}, tentative avec la nouvelle URL")
+            redirect_url = response.headers.get('Location')
+            if redirect_url:
+                # Refaire la requête avec la nouvelle URL
+                if not redirect_url.startswith('http'):
+                    redirect_url = f"{base_url}{redirect_url}"
+                response = requests.request(
+                    method=method,
+                    url=redirect_url,
+                    params=params,
+                    json=json_data,
+                    timeout=timeout,
+                    allow_redirects=False
+                )
+        
         response.raise_for_status()
         
         if response_format == "toon":
