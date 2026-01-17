@@ -214,6 +214,17 @@ agent TRANSACTION_ID:
     PYTHONPATH=. .venv/bin/python fraud_graph/run_agent.py {{TRANSACTION_ID}}
     @echo "✅ Agent analysis complete!"
 
+# Run agent on all transaction IDs from ground truth
+agent-all:
+    @echo "🚀 Running LangGraph agent on all transactions from ground truth..."
+    PYTHONPATH=. .venv/bin/python scripts/run_agent_all.py
+
+# Extract transaction IDs from ground truth CSV
+extract-ids:
+    @echo "📋 Extracting transaction IDs from ground truth CSV..."
+    PYTHONPATH=. .venv/bin/python scripts/extract_transaction_ids.py
+    @echo "✅ Transaction IDs extracted to dataset/ground_truth/transaction_ids.json"
+
 # Run LangGraph with API check
 lang-safe: check-env
     @echo "🚀 Starting LangGraph fraud detection..."

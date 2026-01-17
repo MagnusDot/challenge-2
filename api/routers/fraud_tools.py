@@ -3,7 +3,8 @@
 import logging
 import math
 from typing import Optional, Dict, List, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from email.utils import parsedate_to_datetime
 from fastapi import APIRouter, HTTPException, Query, Body
 from pydantic import BaseModel
 
@@ -150,6 +151,26 @@ async def check_time_correlation(request: TimeCorrelationRequest):
             "invoice", "urgent", "overdue", "accounting", "billing", "supplier",
         ]
         
+        # Fonction helper pour extraire l'ID utilisateur d'un email
+        def _extract_user_id_from_line(line: str) -> Optional[str]:
+            if 'From:' not in line and 'To:' not in line:
+                return None
+            parts = line.split(':', 1)
+            if len(parts) > 1:
+                user_part = parts[1].strip()
+                if '"' in user_part:
+                    import re
+                    quoted_match = re.search(r'"([^"]+)"', user_part)
+                    if quoted_match:
+                        name = quoted_match.group(1)
+                        return name.replace(' ', '_')
+                if '@' in user_part:
+                    email_part = user_part.split('@')[0].strip()
+                    email_part = email_part.replace('<', '').replace('>', '').strip()
+                    return email_part.replace('.', '_')
+                return user_part.replace(' ', '_')
+            return None
+        
         # Chercher les emails/SMS de phishing
         phishing_events = []
         tx_timestamp = transaction.timestamp
@@ -157,39 +178,65 @@ async def check_time_correlation(request: TimeCorrelationRequest):
         if tx_timestamp:
             try:
                 tx_time = datetime.fromisoformat(tx_timestamp.replace('Z', '+00:00'))
+                # S'assurer que tx_time est aware (avec timezone)
+                if tx_time.tzinfo is None:
+                    tx_time = tx_time.replace(tzinfo=timezone.utc)
             except:
                 tx_time = None
         else:
             tx_time = None
         
-        # Chercher dans les emails
+        # Obtenir l'ID utilisateur (first_name_last_name) pour filtrer les emails/SMS
+        sender_user_id = None
+        if sender:
+            sender_user_id = f"{sender.first_name}_{sender.last_name}"
+        
+        # Chercher dans les emails (filtrer par utilisateur)
         for email in emails:
-            email_content = email.mail.lower()
-            if any(kw in email_content for kw in phishing_keywords):
+            # Vérifier que l'email appartient à l'utilisateur
+            email_belongs_to_user = False
+            if sender_user_id:
+                email_content = email.mail
+                lines = email_content.split('\n')
+                for line in lines:
+                    if 'From:' in line or 'To:' in line:
+                        user_id = _extract_user_id_from_line(line)
+                        if user_id and sender_user_id.lower() in user_id.lower():
+                            email_belongs_to_user = True
+                            break
+            
+            if not email_belongs_to_user:
+                continue
+            
+            email_content_lower = email.mail.lower()
+            if any(kw in email_content_lower for kw in phishing_keywords):
                 # Extraire le timestamp de l'email
                 email_time = None
                 for line in email.mail.split('\n'):
                     if line.lower().startswith('date:'):
                         try:
                             date_str = line.split(':', 1)[1].strip()
-                            email_time = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-                        except:
+                            # Parser le format RFC 2822 (ex: "Tue, 06 Jan 2026 10:33:40 +0100")
+                            email_time = parsedate_to_datetime(date_str)
+                        except Exception as e:
+                            logger.debug(f"Error parsing email date '{date_str}': {e}")
                             pass
                         break
                 
                 if email_time and tx_time:
                     time_diff = (tx_time - email_time).total_seconds() / 3600
+                    # Email doit être AVANT la transaction (time_diff >= 0) et dans la fenêtre
                     if 0 <= time_diff <= request.time_window_hours:
                         phishing_events.append({
                             "type": "email",
                             "time": email_time.isoformat(),
                             "time_diff_hours": round(time_diff, 2),
-                            "preview": email_content[:200]
+                            "preview": email_content_lower[:200]
                         })
         
-        # Chercher dans les SMS
+        # Chercher dans les SMS (filtrer par utilisateur)
         for sms in sms_list:
-            if sender.biotag and sender.biotag.lower() in sms.id_user.lower():
+            if sender_user_id and sender_user_id.lower() in sms.id_user.lower():
                 sms_content = sms.sms.lower()
                 if any(kw in sms_content for kw in phishing_keywords):
                     sms_time = None
@@ -201,6 +248,7 @@ async def check_time_correlation(request: TimeCorrelationRequest):
                     
                     if sms_time and tx_time:
                         time_diff = (tx_time - sms_time).total_seconds() / 3600
+                        # SMS doit être AVANT la transaction (time_diff >= 0) et dans la fenêtre
                         if 0 <= time_diff <= request.time_window_hours:
                             phishing_events.append({
                                 "type": "sms",
@@ -252,6 +300,15 @@ async def check_new_merchant(request: NewMerchantRequest):
         # Récupérer toutes les transactions de l'utilisateur
         user_transactions = [t for t in transactions if t.sender_id == sender.biotag]
         
+        # Parser le timestamp de la transaction actuelle
+        tx_timestamp = transaction.timestamp
+        tx_time = None
+        if tx_timestamp:
+            try:
+                tx_time = datetime.fromisoformat(tx_timestamp.replace('Z', '+00:00'))
+            except:
+                pass
+        
         # Vérifier si le recipient_id ou recipient_iban a déjà été utilisé
         recipient_id = transaction.recipient_id
         recipient_iban = transaction.recipient_iban
@@ -263,6 +320,17 @@ async def check_new_merchant(request: NewMerchantRequest):
         for other_tx in user_transactions:
             if other_tx.transaction_id == transaction.transaction_id:
                 continue
+            
+            # CRITIQUE: Ne considérer que les transactions ANTÉRIEURES à la transaction analysée
+            if tx_time and other_tx.timestamp:
+                try:
+                    other_time = datetime.fromisoformat(other_tx.timestamp.replace('Z', '+00:00'))
+                    # Ignorer les transactions postérieures
+                    if other_time >= tx_time:
+                        continue
+                except:
+                    # Si on ne peut pas parser le timestamp, on ignore cette transaction
+                    continue
             
             # Vérifier recipient_id
             if recipient_id and other_tx.recipient_id and recipient_id == other_tx.recipient_id:
@@ -399,7 +467,8 @@ async def check_location_anomaly(request: LocationAnomalyRequest):
                 # Calculer la distance entre les villes
                 city_distance = calculate_city_distance(tx_city, residence_city)
                 
-                has_anomaly = tx_city not in seen_cities and (city_distance is None or city_distance > 100)
+                # Anomalie si : ville jamais visitée ET (distance inconnue OU distance >= 100 km)
+                has_anomaly = tx_city not in seen_cities and (city_distance is None or city_distance >= 100)
                 
                 return {
                     "transaction_id": request.transaction_id,
@@ -422,7 +491,7 @@ async def check_location_anomaly(request: LocationAnomalyRequest):
                     float(tx_lng)
                 )
                 
-                has_anomaly = distance_km > 100  # Plus de 100km de la résidence
+                has_anomaly = distance_km >= 100  # 100km ou plus de la résidence
                 
                 return {
                     "transaction_id": request.transaction_id,
@@ -451,7 +520,7 @@ async def check_location_anomaly(request: LocationAnomalyRequest):
 
 @router.post("/check-withdrawal-pattern")
 async def check_withdrawal_pattern(request: WithdrawalPatternRequest):
-    """Vérifie les patterns de retraits multiples."""
+    """Vérifie les patterns de retraits multiples ou post-withdrawal patterns."""
     try:
         transactions = load_transactions()
         users = load_users()
@@ -460,13 +529,9 @@ async def check_withdrawal_pattern(request: WithdrawalPatternRequest):
         if not transaction:
             raise HTTPException(status_code=404, detail=f"Transaction {request.transaction_id} not found")
         
-        # Vérifier que c'est un retrait
-        if transaction.transaction_type not in ["prelievo", "withdrawal"]:
-            return {
-                "transaction_id": request.transaction_id,
-                "has_pattern": False,
-                "reason": "Not a withdrawal transaction"
-            }
+        # Pour les retraits : chercher les patterns de retraits multiples
+        # Pour les autres transactions (in-person payment, etc.) : chercher les retraits précédents (post-withdrawal pattern)
+        is_withdrawal = transaction.transaction_type in ["prelievo", "withdrawal"]
         
         # Trouver l'utilisateur
         sender = None
@@ -510,7 +575,15 @@ async def check_withdrawal_pattern(request: WithdrawalPatternRequest):
                 if other_tx.timestamp:
                     try:
                         other_time = datetime.fromisoformat(other_tx.timestamp.replace('Z', '+00:00'))
-                        time_diff_hours = abs((tx_time - other_time).total_seconds() / 3600)
+                        if is_withdrawal:
+                            # Pour les retraits : chercher les autres retraits (avant ou après)
+                            time_diff_hours = abs((tx_time - other_time).total_seconds() / 3600)
+                        else:
+                            # Pour les autres transactions : chercher les retraits AVANT seulement (post-withdrawal pattern)
+                            if other_time >= tx_time:
+                                continue  # Ignorer les retraits postérieurs
+                            time_diff_hours = (tx_time - other_time).total_seconds() / 3600
+                        
                         if time_diff_hours <= request.time_window_hours:
                             recent_withdrawals.append({
                                 "transaction_id": other_tx.transaction_id,
@@ -522,14 +595,20 @@ async def check_withdrawal_pattern(request: WithdrawalPatternRequest):
                     except:
                         pass
         
-        has_pattern = len(recent_withdrawals) >= 1  # Au moins 1 autre retrait + celui-ci = 2 minimum
+        if is_withdrawal:
+            # Pattern de retraits multiples : au moins 1 autre retrait + celui-ci = 2 minimum
+            has_pattern = len(recent_withdrawals) >= 1
+        else:
+            # Post-withdrawal pattern : au moins 1 retrait avant cette transaction
+            has_pattern = len(recent_withdrawals) >= 1
         
         return {
             "transaction_id": request.transaction_id,
             "has_pattern": has_pattern,
             "time_window_hours": request.time_window_hours,
             "recent_withdrawals": recent_withdrawals,
-            "total_withdrawals_in_window": len(recent_withdrawals) + 1  # +1 pour la transaction actuelle
+            "recent_withdrawals_count": len(recent_withdrawals),
+            "total_withdrawals_in_window": len(recent_withdrawals) + (1 if is_withdrawal else 0)  # +1 seulement si c'est un retrait
         }
         
     except HTTPException:
@@ -581,10 +660,49 @@ async def check_phishing_indicators(request: PhishingIndicatorsRequest):
             except:
                 pass
         
-        phishing_events = []
+        # Fonction helper pour extraire l'ID utilisateur d'un email
+        def _extract_user_id_from_line(line: str) -> Optional[str]:
+            if 'From:' not in line and 'To:' not in line:
+                return None
+            parts = line.split(':', 1)
+            if len(parts) > 1:
+                user_part = parts[1].strip()
+                if '"' in user_part:
+                    import re
+                    quoted_match = re.search(r'"([^"]+)"', user_part)
+                    if quoted_match:
+                        name = quoted_match.group(1)
+                        return name.replace(' ', '_')
+                if '@' in user_part:
+                    email_part = user_part.split('@')[0].strip()
+                    email_part = email_part.replace('<', '').replace('>', '').strip()
+                    return email_part.replace('.', '_')
+                return user_part.replace(' ', '_')
+            return None
         
-        # Chercher dans les emails
+        phishing_events = []
+        # Obtenir l'ID utilisateur (first_name_last_name) pour filtrer les emails/SMS
+        sender_user_id = None
+        if sender:
+            sender_user_id = f"{sender.first_name}_{sender.last_name}"
+        
+        # Chercher dans les emails (filtrer par utilisateur)
         for email in emails:
+            # Vérifier que l'email appartient à l'utilisateur
+            email_belongs_to_user = False
+            if sender_user_id:
+                email_content_raw = email.mail
+                lines = email_content_raw.split('\n')
+                for line in lines:
+                    if 'From:' in line or 'To:' in line:
+                        user_id = _extract_user_id_from_line(line)
+                        if user_id and sender_user_id.lower() in user_id.lower():
+                            email_belongs_to_user = True
+                            break
+            
+            if not email_belongs_to_user:
+                continue
+            
             email_content = email.mail.lower()
             
             # Détecter la catégorie
@@ -600,13 +718,20 @@ async def check_phishing_indicators(request: PhishingIndicatorsRequest):
                     if line.lower().startswith('date:'):
                         try:
                             date_str = line.split(':', 1)[1].strip()
-                            email_time = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-                        except:
+                            # Parser le format RFC 2822 (ex: "Tue, 06 Jan 2026 10:33:40 +0100")
+                            email_time = parsedate_to_datetime(date_str)
+                        except Exception as e:
+                            logger.debug(f"Error parsing email date '{date_str}': {e}")
                             pass
                         break
                 
                 time_diff_hours = None
                 if email_time and tx_time:
+                    # S'assurer que les deux datetime sont aware
+                    if email_time.tzinfo is None:
+                        email_time = email_time.replace(tzinfo=timezone.utc)
+                    if tx_time.tzinfo is None:
+                        tx_time = tx_time.replace(tzinfo=timezone.utc)
                     time_diff_hours = (tx_time - email_time).total_seconds() / 3600
                 
                 phishing_events.append({
@@ -617,9 +742,9 @@ async def check_phishing_indicators(request: PhishingIndicatorsRequest):
                     "preview": email_content[:300]
                 })
         
-        # Chercher dans les SMS
+        # Chercher dans les SMS (filtrer par utilisateur)
         for sms in sms_list:
-            if sender.biotag and sender.biotag.lower() in sms.id_user.lower():
+            if sender_user_id and sender_user_id.lower() in sms.id_user.lower():
                 sms_content = sms.sms.lower()
                 
                 detected_categories = []
@@ -637,6 +762,11 @@ async def check_phishing_indicators(request: PhishingIndicatorsRequest):
                     
                     time_diff_hours = None
                     if sms_time and tx_time:
+                        # S'assurer que les deux datetime sont aware
+                        if sms_time.tzinfo is None:
+                            sms_time = sms_time.replace(tzinfo=timezone.utc)
+                        if tx_time.tzinfo is None:
+                            tx_time = tx_time.replace(tzinfo=timezone.utc)
                         time_diff_hours = (tx_time - sms_time).total_seconds() / 3600
                     
                     phishing_events.append({

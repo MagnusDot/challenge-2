@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-01-17T22:15:34.372429",
+  "result": {
+    "transaction_id": "852e51f0-e44f-40de-96ae-0c40322006fc",
+    "fraud_detected": true,
+    "tool_calls": [
+      "get_transaction_aggregated_batch",
+      "check_withdrawal_pattern",
+      "check_location_anomaly",
+      "report_fraud"
+    ],
+    "response_text": "Analysis of transaction 852e51f0-e44f-40de-96ae-0c40322006fc:\n\n- The transaction is a withdrawal of €50.00 at an ATM in Palermo.\n- The user’s residence is Sant'Agata di Militello, and Palermo is 150 km away—a significant location anomaly.\n- There is a pattern of multiple withdrawals: another withdrawal of €200.00 occurred in Palermo just 16 minutes earlier.\n- Both withdrawals are in a city where the user has not previously transacted.\n\nThese are two strong indicators for the \"Identity Verification\" fraud pattern:\n- Multiple withdrawals in a short time window\n- Location anomaly (different city from residence, and user has not been there before)\n\nAll required indicators for this fraud pattern are present.\n\nProceeding to report this transaction as fraudulent.Transaction 852e51f0-e44f-40de-96ae-0c40322006fc is FRAUDULENT.\n\nEvidence:\n- Multiple withdrawals within a short time window (identity verification scam pattern)\n- Location anomaly: withdrawal in Palermo, which is 150 km from the user's residence in Sant'Agata di Militello\n- The transaction city is different from the user's residence city\n\nFraud has been reported with reasons: multiple_withdrawals, location_anomaly, different_city_from_residence."
+  }
+}

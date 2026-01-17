@@ -53,12 +53,14 @@ async def run_agent_on_transaction(transaction_id: str):
 
 STEP 1: Call get_transaction_aggregated_batch('["{transaction_id}"]') to get transaction data.
 STEP 2: Analyze the transaction thoroughly using all available tools if needed.
-STEP 3: If the transaction is FRAUDULENT, call report_fraud(transaction_id, reasons) with:
+STEP 3: If the transaction is FRAUDULENT, you MUST call the report_fraud tool (not just mention it in text):
+   - Use the report_fraud tool with transaction_id and reasons
    - transaction_id: The UUID of the fraudulent transaction
-   - reasons: A comma-separated list of fraud indicators (e.g., "account_drained,time_correlation,new_merchant")
+   - reasons: A comma-separated list of fraud indicators (e.g., "new_dest,amount_anomaly,time_correlation")
 
 CRITICAL RULES:
 - Use tools to gather evidence before making decisions
+- If fraud is detected, you MUST call the report_fraud tool (execute it, don't just write about it)
 - Call report_fraud() ONLY if you determine the transaction is fraudulent
 - If no fraud detected, do NOT call report_fraud()"""
     

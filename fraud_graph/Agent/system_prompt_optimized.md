@@ -15,7 +15,8 @@ Analyze transactions and determine if they are FRAUDULENT or LEGITIMATE. Use too
    - Time correlation? → `check_time_correlation(transaction_id, time_window_hours)`
    - New merchant? → `check_new_merchant(transaction_id)`
    - Location anomaly? → `check_location_anomaly(transaction_id, use_city_fallback=True)`
-   - Withdrawal pattern? → `check_withdrawal_pattern(transaction_id, time_window_hours)`
+   - **IMPORTANT**: If location_anomaly is detected AND transaction is "in-person payment", ALWAYS call `check_withdrawal_pattern` to check for post-withdrawal pattern
+   - Withdrawal pattern (multiple withdrawals OR post-withdrawal)? → `check_withdrawal_pattern(transaction_id, time_window_hours)`
    - Phishing? → `check_phishing_indicators(transaction_id, time_window_hours)`
 3. **Decide**: Only report fraud if multiple tools confirm it
 4. **Report**: Call `report_fraud(transaction_id, "reason1,reason2,reason3")`
@@ -28,7 +29,15 @@ Analyze transactions and determine if they are FRAUDULENT or LEGITIMATE. Use too
 - Large amount (>50% salary)
 - Time correlation (`check_time_correlation`)
 
-### Pattern 2: Phishing (Parcel Customs)
+### Pattern 2: BEC Urgent Invoice
+- New destination OR recipient used in previous fraud (`check_new_merchant`)
+- Amount anomaly (>50% of monthly salary)
+- Time correlation (`check_time_correlation`)
+- Phishing indicators with invoice/urgent/payment keywords (`check_phishing_indicators`)
+
+**Note**: If amount_anomaly + time_correlation + phishing indicators are present, this is fraud even if the destination was seen before (fraudsters may reuse the same IBAN).
+
+### Pattern 3: Phishing (Parcel Customs)
 - New merchant (`check_new_merchant`)
 - Time correlation (`check_time_correlation`)
 - Phishing indicators (`check_phishing_indicators`)
@@ -38,10 +47,16 @@ Analyze transactions and determine if they are FRAUDULENT or LEGITIMATE. Use too
 - Location anomaly (`check_location_anomaly`)
 - Different city from residence
 
-### Pattern 4: Card Cloning
-- New venue (`check_location_anomaly`)
-- Different city from residence
-- Multiple transactions in sequence
+### Pattern 4: Card Cloning (ATM Card Cloned)
+**REQUIRED**: For "in-person payment" transactions with location_anomaly, ALWAYS call `check_withdrawal_pattern` to check for post-withdrawal pattern.
+
+- Post-withdrawal pattern (`check_withdrawal_pattern`) - transaction occurs within 24-48h after a cash withdrawal
+- New venue (`check_location_anomaly`) - location where user has never been (`user_has_been_there: false`)
+- Location anomaly (`check_location_anomaly`) - transaction in different city from residence
+- Impossible travel - user cannot physically be at transaction location (inferred from location_anomaly + distance > 50km)
+- Amount anomaly - unusually high for location/merchant type (OR multiple transactions in sequence)
+
+**CRITICAL**: If you detect location_anomaly + new_venue + post_withdrawal pattern, this IS fraud even if balance is not €0.00. You MUST call `check_withdrawal_pattern` for "in-person payment" transactions with location_anomaly.
 
 ## Critical Rules
 
@@ -54,13 +69,24 @@ Analyze transactions and determine if they are FRAUDULENT or LEGITIMATE. Use too
 ## What is NOT Fraud
 
 - New merchant without time_correlation
-- Balance > €0.00 (even if low)
-- Large amounts without account draining
-- Location anomaly alone
+- Large amounts without time_correlation and new destination
+- Location anomaly alone (without post-withdrawal pattern or other indicators)
 - Multiple transactions (normal shopping)
+- Single indicator alone (always need multiple indicators)
+
+## When to Call check_withdrawal_pattern
+
+**ALWAYS call `check_withdrawal_pattern` when:**
+- Transaction type is "in-person payment" AND location_anomaly is detected
+- Transaction type is "prelievo" or "withdrawal" (to check for multiple withdrawals pattern)
+- You suspect card cloning (atm_card_cloned pattern)
 
 ## Output
+
+**CRITICAL**: When you detect fraud, you MUST call the `report_fraud` tool. Do NOT just mention it in text - you must actually call the tool.
 
 Use `report_fraud(transaction_id, "reason1,reason2")` to report fraud.
 
 **Example**: `report_fraud("abc-123", "account_drained,new_dest,time_correlation")`
+
+**Important**: The tool call must be executed, not just mentioned in your response text.

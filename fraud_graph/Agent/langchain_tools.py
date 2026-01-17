@@ -70,6 +70,11 @@ def _make_api_request_sync(
     
     params['format'] = response_format
     
+    # Log de l'appel API
+    logger.info(f"🌐 API CALL: {method} {endpoint}")
+    if json_data:
+        logger.debug(f"   Request body: {json.dumps(json_data, indent=2, ensure_ascii=False)[:500]}")
+    
     try:
         response = requests.request(
             method=method,
@@ -82,10 +87,16 @@ def _make_api_request_sync(
         response.raise_for_status()
         
         if response_format == "toon":
-            return response.text
+            result = response.text
+            logger.info(f"✅ API RESPONSE ({endpoint}): {len(result)} caractères")
+            logger.debug(f"   Response preview: {result[:200]}...")
+            return result
         else:
-            return response.json()
+            result = response.json()
+            logger.info(f"✅ API RESPONSE ({endpoint}): {json.dumps(result, indent=2, ensure_ascii=False)[:500]}")
+            return result
     except requests.exceptions.RequestException as e:
+        logger.error(f"❌ API ERROR ({endpoint}): {str(e)}", exc_info=True)
         raise Exception(f"API request failed: {str(e)}")
 
 
@@ -129,6 +140,10 @@ def _save_fraud_sync(fraud_entry: dict) -> None:
 @safe_tool_execution
 def _report_fraud_impl(transaction_id: str, reasons: str) -> str:
     """Report a fraudulent transaction (implémentation)."""
+    logger.info(f"🚨🚨🚨 REPORT FRAUD APPELÉ 🚨🚨🚨")
+    logger.info(f"   transaction_id: {transaction_id}")
+    logger.info(f"   reasons: {reasons}")
+    
     fraud_entry = {
         'transaction_id': transaction_id,
         'risk_level': 'critical',
@@ -138,9 +153,14 @@ def _report_fraud_impl(transaction_id: str, reasons: str) -> str:
         'detected_at': datetime.now().isoformat()
     }
     
-    _save_fraud_sync(fraud_entry)
-    
-    return f"Fraud reported and saved for transaction {transaction_id}: {reasons}"
+    try:
+        _save_fraud_sync(fraud_entry)
+        result = f"Fraud reported and saved for transaction {transaction_id}: {reasons}"
+        logger.info(f"✅ REPORT FRAUD SUCCÈS: {result}")
+        return result
+    except Exception as e:
+        logger.error(f"❌ ERREUR lors de la sauvegarde de la fraude: {e}", exc_info=True)
+        raise
 
 
 @safe_tool_execution

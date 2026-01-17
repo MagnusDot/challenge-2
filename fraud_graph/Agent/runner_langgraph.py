@@ -129,7 +129,8 @@ class LangGraphRunner:
                                         tool_name = tool_call.get('name', 'unknown')
                                     
                                     if tool_name:
-                                        logger.debug(f"🔧 Tool call détecté: {tool_name} avec args: {tool_args}")
+                                        logger.info(f"🔧 TOOL CALL: {tool_name}")
+                                        logger.info(f"   Args: {json.dumps(tool_args, indent=2, ensure_ascii=False)}")
                                         yield type('Event', (), {
                                             '__class__': type('ToolCall', (), {}),
                                             'type': 'tool_call',
@@ -149,8 +150,25 @@ class LangGraphRunner:
                             else:
                                 content = str(msg)
                             
-                            # Ignorer les ToolMessage (résultats d'outils)
+                            # Capturer les ToolMessage (résultats d'outils)
                             if isinstance(msg, ToolMessage):
+                                tool_result = None
+                                if hasattr(msg, 'content'):
+                                    tool_result = msg.content
+                                elif isinstance(msg, dict):
+                                    tool_result = msg.get('content', '')
+                                
+                                tool_name = None
+                                if hasattr(msg, 'name'):
+                                    tool_name = msg.name
+                                elif isinstance(msg, dict):
+                                    tool_name = msg.get('name', 'unknown')
+                                
+                                if tool_result:
+                                    result_preview = str(tool_result)[:300] if len(str(tool_result)) > 300 else str(tool_result)
+                                    logger.info(f"📥 TOOL RESULT ({tool_name}): {result_preview}")
+                                    if len(str(tool_result)) > 300:
+                                        logger.debug(f"   Full result: {tool_result}")
                                 continue
                             
                             # Événement de réponse seulement si contenu textuel
@@ -249,7 +267,7 @@ CRITICAL RULES:
                 if 'tool_call' in event_type.lower() or hasattr(event, 'function_name'):
                     tool_name = getattr(event, 'function_name', getattr(event, 'name', getattr(event, 'function', None)))
                     tool_calls_count += 1
-                    logger.debug(f"🔧 Tool call détecté: {tool_name} (batch {batch_num})")
+                    logger.info(f"🔧 TOOL CALL détecté (batch {batch_num}): {tool_name}")
                     
                     if tool_name == 'report_fraud':
                         args = {}
@@ -264,15 +282,24 @@ CRITICAL RULES:
                                 except:
                                     pass
                         
+                        logger.info(f"🚨🚨🚨 REPORT_FRAUD EVENT DÉTECTÉ (batch {batch_num})")
+                        logger.info(f"   Event type: {event_type}")
+                        logger.info(f"   Event attributes: {dir(event)}")
+                        logger.info(f"   Args: {args}")
+                        
                         if isinstance(args, dict):
                             transaction_id = args.get('transaction_id', '')
                             reasons_str = args.get('reasons', '')
                             if transaction_id:
-                                logger.info(f"🚨 Fraude détectée (batch {batch_num}): {transaction_id} - {reasons_str}")
+                                logger.info(f"🚨🚨🚨 FRAUDE DÉTECTÉE ET AJOUTÉE (batch {batch_num}): {transaction_id} - {reasons_str}")
                                 fraud_reports.append({
                                     'transaction_id': transaction_id,
                                     'reasons': reasons_str
                                 })
+                            else:
+                                logger.warning(f"⚠️  REPORT_FRAUD sans transaction_id valide: {args}")
+                        else:
+                            logger.warning(f"⚠️  REPORT_FRAUD avec args invalides: {type(args)} - {args}")
                 
                 # Extraire le texte de réponse
                 if hasattr(event, 'text'):
